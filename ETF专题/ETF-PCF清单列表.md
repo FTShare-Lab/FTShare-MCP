@@ -8,7 +8,7 @@
 - 提示：
   - `date` 必填，YYYYMMDD 格式，传非有效日期会被拒。
   - 列表只返回文件元信息，实际 PCF 内容（XML）需通过下载接口按 filename 获取。
-  - 数据样例待公网可访问后补真实数据。
+  - 真实数据样例需按公共服务返回补充。
 
 ## 输入参数
 
@@ -50,7 +50,7 @@ SID=$(curl -sS -m 10 -D - -o /dev/null -X POST <MCP_BASE_URL> \
 curl -sS -m 10 -X POST <MCP_BASE_URL> \
   -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_etf_pcf_list_handler","arguments":{"date": "20260624"}}}'
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_etf_pcf_list_handler","arguments":{"date": 20260624}}}'
 ```
 
 **Python（`mcp` SDK，自动握手管理 session）**：
@@ -64,7 +64,7 @@ async def main():
     async with streamablehttp_client('<MCP_BASE_URL>') as (r, w, _):
         async with ClientSession(r, w) as s:
             await s.initialize()
-            res = await s.call_tool('ft_etf_pcf_list_handler', {"date": "20260624"})
+            res = await s.call_tool('ft_etf_pcf_list_handler', {"date": 20260624})
             print(res.content[0].text)   # markdown 表格文本
 
 asyncio.run(main())

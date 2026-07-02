@@ -53,7 +53,7 @@ SID=$(curl -sS -m 10 -D - -o /dev/null -X POST <MCP_BASE_URL> \
 curl -sS -m 10 -X POST <MCP_BASE_URL> \
   -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_stock_candlesticks","arguments":{"symbol": "600584.SH", "interval_unit": "Day", "until_ts_millis": 1782800280000}}}'
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_stock_candlesticks","arguments":{"symbol": "600584.SH", "interval_unit": "day", "until_ts_millis": 1782800280000}}}'
 ```
 
 **Python（`mcp` SDK，自动握手管理 session）**：
@@ -67,7 +67,7 @@ async def main():
     async with streamablehttp_client('<MCP_BASE_URL>') as (r, w, _):
         async with ClientSession(r, w) as s:
             await s.initialize()
-            res = await s.call_tool('ft_stock_candlesticks', {"symbol": "600584.SH", "interval_unit": "Day", "until_ts_millis": 1782800280000})
+            res = await s.call_tool('ft_stock_candlesticks', {"symbol": "600584.SH", "interval_unit": "day", "until_ts_millis": 1782800280000})
             print(res.content[0].text)   # markdown 表格文本
 
 asyncio.run(main())

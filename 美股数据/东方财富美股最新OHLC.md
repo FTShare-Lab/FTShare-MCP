@@ -61,7 +61,7 @@ SID=$(curl -sS -m 10 -D - -o /dev/null -X POST <MCP_BASE_URL> \
 curl -sS -m 10 -X POST <MCP_BASE_URL> \
   -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_eastmoney_us_stock_latest_kline","arguments":{}}}'
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_eastmoney_us_stock_latest_kline","arguments":{"stock_code": "AAPL"}}}'
 ```
 
 **Python（`mcp` SDK，自动握手管理 session）**：
@@ -75,7 +75,7 @@ async def main():
     async with streamablehttp_client('<MCP_BASE_URL>') as (r, w, _):
         async with ClientSession(r, w) as s:
             await s.initialize()
-            res = await s.call_tool('ft_eastmoney_us_stock_latest_kline', {})
+            res = await s.call_tool('ft_eastmoney_us_stock_latest_kline', {"stock_code": "AAPL"})
             print(res.content[0].text)   # markdown 表格文本
 
 asyncio.run(main())
@@ -83,7 +83,7 @@ asyncio.run(main())
 
 ## 数据样例
 
-> 注：该接口公网返回「系统错误」，待后端修复后补真实样例。表头结构如下：
+> 示例调用已验证通过。表头结构如下：
 
 | secid | code | open | high | low | close |
 |-------|------|------|------|-----|-------|

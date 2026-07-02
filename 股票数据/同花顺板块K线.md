@@ -54,7 +54,7 @@ SID=$(curl -sS -m 10 -D - -o /dev/null -X POST <MCP_BASE_URL> \
 curl -sS -m 10 -X POST <MCP_BASE_URL> \
   -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_ths_board_kline","arguments":{"board_code": "BK0425"}}}'
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_ths_board_kline","arguments":{"board_code": "886056"}}}'
 ```
 
 **Python（`mcp` SDK，自动握手管理 session）**：
@@ -68,7 +68,7 @@ async def main():
     async with streamablehttp_client('<MCP_BASE_URL>') as (r, w, _):
         async with ClientSession(r, w) as s:
             await s.initialize()
-            res = await s.call_tool('ft_ths_board_kline', {"board_code": "BK0425"})
+            res = await s.call_tool('ft_ths_board_kline', {"board_code": "886056"})
             print(res.content[0].text)   # markdown 表格文本
 
 asyncio.run(main())

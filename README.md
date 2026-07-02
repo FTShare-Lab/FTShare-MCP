@@ -67,7 +67,7 @@ curl -sS -m 30 -X POST "$MCP_BASE_URL" \
 
 下面示例使用 Python MCP 客户端库调用任意 `ft_*` 工具。
 
-依赖安装：`pip install mcp`
+依赖安装（Python 3.10+）：`pip install mcp`
 
 ```python
 import asyncio  # 运行异步 main 函数。

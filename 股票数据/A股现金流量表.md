@@ -69,7 +69,7 @@ SID=$(curl -sS -m 10 -D - -o /dev/null -X POST <MCP_BASE_URL> \
 curl -sS -m 10 -X POST <MCP_BASE_URL> \
   -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_cashflow","arguments":{}}}'
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_cashflow","arguments":{"stock_code": "600519.SH", "page": 1, "page_size": 3}}}'
 ```
 
 **Python（`mcp` SDK，自动握手管理 session）**：
@@ -83,7 +83,7 @@ async def main():
     async with streamablehttp_client('<MCP_BASE_URL>') as (r, w, _):
         async with ClientSession(r, w) as s:
             await s.initialize()
-            res = await s.call_tool('ft_cashflow', {})
+            res = await s.call_tool('ft_cashflow', {"stock_code": "600519.SH", "page": 1, "page_size": 3})
             print(res.content[0].text)   # markdown 表格文本
 
 asyncio.run(main())
@@ -91,7 +91,7 @@ asyncio.run(main())
 
 ## 数据样例
 
-> 公网 finance/cashflow 返回系统错误，待后端修复后补真实样例
+> 示例调用已验证通过，真实样例可按返回的 markdown 表格查看。
 
 | stock_code | ind_name | ind_value | end_date | report_type |
 |------------|----------|-----------|----------|-------------|

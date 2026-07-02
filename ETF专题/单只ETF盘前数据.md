@@ -9,7 +9,7 @@
   - `symbol` 必填，带交易所后缀（如 510300.XSHG、159915.XSHE）。
   - 不传 `date` 用当日（CST）；未找到该 ETF 盘前信息时返回错误。
   - `creation_redemption_flag` 为位掩码：1=允许申购，2=允许赎回；`member_market_type` 为成分股类型位掩码（1=上交所 2=深交所 4=港交所 8=北交所 16=外汇 32=其他）。
-  - 数据样例待公网可访问后补真实数据。
+  - 真实数据样例需按公共服务返回补充。
 
 ## 输入参数
 
@@ -53,7 +53,7 @@ SID=$(curl -sS -m 10 -D - -o /dev/null -X POST <MCP_BASE_URL> \
 curl -sS -m 10 -X POST <MCP_BASE_URL> \
   -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_get_etf_pre_single_handler","arguments":{"symbol": "600584.SH"}}}'
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_get_etf_pre_single_handler","arguments":{"symbol": "510300.XSHG"}}}'
 ```
 
 **Python（`mcp` SDK，自动握手管理 session）**：
@@ -67,7 +67,7 @@ async def main():
     async with streamablehttp_client('<MCP_BASE_URL>') as (r, w, _):
         async with ClientSession(r, w) as s:
             await s.initialize()
-            res = await s.call_tool('ft_get_etf_pre_single_handler', {"symbol": "600584.SH"})
+            res = await s.call_tool('ft_get_etf_pre_single_handler', {"symbol": "510300.XSHG"})
             print(res.content[0].text)   # markdown 表格文本
 
 asyncio.run(main())
