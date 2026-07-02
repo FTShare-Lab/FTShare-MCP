@@ -1,6 +1,16 @@
-# ftshare MCP 工具文档
+# FTShare MCP
 
-ftshare MCP server 是 FTShare 金融数据能力的 MCP 工具层，面向支持 MCP 的客户端、Agent 应用和自动化投研流程。当前提供 **150 个 `ft_*` 工具**，覆盖行情、财务、宏观、基金、期货、债券、美股、港股等数据；各工具文档列出输入参数、输出字段、数据样例和 MCP 调用方式。
+[中文](README.md) | [English](README_EN.md)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+`FTShare-MCP` 是 FTShare 金融数据能力的 MCP 工具文档与接入说明仓库，面向支持 MCP 的客户端、Agent 应用和自动化投研流程，提供公共 MCP 入口、调用流程、工具索引、参数说明和示例。
+
+> 当前仓库重点是 **MCP 工具文档与接入说明**，不包含 MCP Server 源码。公共 MCP 服务由 FTShare 数据服务提供。
+
+当前文档重点覆盖 FTShare 正式开放的 **150 个 `ft_*` 金融数据工具**，覆盖行情、财务、宏观、基金、期货、债券、美股、港股等数据；测试、示例或内部辅助工具不作为正式文档入口展示。
+
+## MCP 公共入口
 
 本文档统一使用 `<MCP_BASE_URL>` 表示 MCP Streamable HTTP 入口。公共 MCP 入口为：
 
@@ -14,6 +24,13 @@ MCP_BASE_URL="https://market.ft.tech/gateway/mcp"
 - **协议要点**：先 `initialize` 拿 `Mcp-Session-Id`，再 `tools/call`
 - **返回格式**：markdown 表格文本（非结构化 JSON）
 - **查实时 schema**：`tools/list` 返回每个工具的 `inputSchema`
+
+## 适用场景
+
+- Claude Code、Codex、Cursor、OpenClaw 等支持 MCP 的客户端
+- Agent 投研工作流中的金融数据工具调用
+- 自动化行情、财务、宏观、基金、期货、债券、美股、港股数据查询
+- 面向投研、量化研究和金融应用开发的数据接入验证
 
 ## 调用流程
 
@@ -100,6 +117,19 @@ async def main():  # 定义异步入口函数。
 
 asyncio.run(main())  # 启动异步程序。
 ```
+
+## 社区交流
+
+欢迎加入 FTShare 社区交流群，一起讨论 MCP 接入、工具调用、金融数据接口、Agent 投研工作流和项目贡献方向。
+
+<img src="docs/assets/wechat-group.png" alt="FTShare 微信交流群" width="320" />
+
+> **群规说明**：
+> - 仅限 FTShare 项目、MCP 接入、金融数据接口和 Agent 投研工作流相关讨论
+> - 禁止广告、推广、无关闲聊
+> - Bug、功能需求和工具文档问题，建议优先在 GitHub Issues 中提交，群内用于快速交流和补充说明
+
+**二维码有效期至 2026 年 7 月 8 日。** 如二维码失效，请在 Issues 中留言，维护者会更新入群方式。
 
 ## 按数据目录
 
@@ -272,3 +302,9 @@ asyncio.run(main())  # 启动异步程序。
 | `ft_ths_board_kline` | 同花顺板块K线 | 股票数据 | [股票数据/同花顺板块K线.md](./股票数据/同花顺板块K线.md) |
 | `ft_ths_board_list` | 同花顺板块列表 | 股票数据 | [股票数据/同花顺板块列表.md](./股票数据/同花顺板块列表.md) |
 | `ft_xueqiu_rank` | 雪球股票排名 | 股票数据 | [股票数据/雪球股票排名.md](./股票数据/雪球股票排名.md) |
+
+## License
+
+本项目文档采用 MIT License，详见 [LICENSE](LICENSE)。
+
+MIT License 适用于本仓库中的文档与示例，不代表 FTShare 数据服务本身无限制开放。FTShare 数据接口的访问额度、权限和商业用途，以 FTShare 数据服务条款为准。
