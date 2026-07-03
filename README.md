@@ -207,7 +207,7 @@ asyncio.run(main())  # 启动异步程序。
 | `ft_major_contract_summary` | 重大合同汇总 | 期货数据 | [期货数据/重大合同汇总.md](./期货数据/重大合同汇总.md) |
 | `ft_get_company_hk` | 港股公司信息 | 港股数据 | [港股数据/港股公司信息.md](./港股数据/港股公司信息.md) |
 | `ft_get_eastmoney_hk_index_daily_kline` | 东方财富港股指数日K | 港股数据 | [港股数据/东方财富港股指数日K.md](./港股数据/东方财富港股指数日K.md) |
-| `ft_get_hk_basinfo_get / get_hk_basinfo_post` | 港股个股信息 | 港股数据 | [港股数据/港股个股信息.md](./港股数据/港股个股信息.md) |
+| `ft_get_hk_basinfo` | 港股个股信息 | 港股数据 | [港股数据/港股个股信息.md](./港股数据/港股个股信息.md) |
 | `ft_get_hk_candlesticks` | 港股K线 | 港股数据 | [港股数据/港股K线.md](./港股数据/港股K线.md) |
 | `ft_get_hk_valuatnanalyd` | 港股估值分析 | 港股数据 | [港股数据/港股估值分析.md](./港股数据/港股估值分析.md) |
 | `ft_get_market_cap_hk` | 港股市值 | 港股数据 | [港股数据/港股市值.md](./港股数据/港股市值.md) |
