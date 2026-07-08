@@ -6,6 +6,8 @@
 
 `FTShare-MCP` is the MCP tool documentation and integration guide for FTShare financial data capabilities. It is designed for MCP-compatible clients, Agent applications, and automated investment research workflows. This repository provides the public MCP endpoint, calling workflow, tool index, parameter descriptions, and examples.
 
+For international developers, this repository can be understood as **FTShare MCP tools for financial data, market data, quantitative research, and AI Agent investment workflows**.
+
 > This repository focuses on **MCP tool documentation and integration instructions**. It does not contain the MCP Server source code. The public MCP service is provided by the FTShare data service.
 
 The current documentation focuses on **150 officially documented `ft_*` financial data tools**, covering market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. Testing, demo, or internal helper tools are not listed as official documentation entries.
@@ -121,6 +123,11 @@ For the full tool index and individual tool documentation, see the Chinese [READ
 - Most tools return markdown table text, not structured JSON.
 - Some tools have time-window, pagination, quota, or permission constraints.
 - Access quota, permissions, and commercial use of FTShare data interfaces are subject to FTShare data service terms.
+
+## Related Projects
+
+- [FTShare-python-sdk](https://github.com/FTShare-Lab/FTShare-python-sdk): FTShare financial data Python SDK for developer-facing data access
+- [FTShare-skills](https://github.com/FTShare-Lab/FTShare-skills): FTShare Agent Skills repository for data-level Skills and investment research workflow Skills
 
 ## Community
 

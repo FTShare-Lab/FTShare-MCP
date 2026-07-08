@@ -6,6 +6,8 @@
 
 `FTShare-MCP` 是 FTShare 金融数据能力的 MCP 工具文档与接入说明仓库，面向支持 MCP 的客户端、Agent 应用和自动化投研流程，提供公共 MCP 入口、调用流程、工具索引、参数说明和示例。
 
+面向国际开发者，本仓库也可以被理解为 **FTShare MCP tools for financial data, market data, quantitative research and AI Agent investment workflows**。
+
 > 当前仓库重点是 **MCP 工具文档与接入说明**，不包含 MCP Server 源码。公共 MCP 服务由 FTShare 数据服务提供。
 
 当前文档重点覆盖 FTShare 正式开放的 **150 个 `ft_*` 金融数据工具**，覆盖行情、财务、宏观、基金、期货、债券、美股、港股等数据；测试、示例或内部辅助工具不作为正式文档入口展示。
@@ -130,6 +132,11 @@ asyncio.run(main())  # 启动异步程序。
 > - Bug、功能需求和工具文档问题，建议优先在 GitHub Issues 中提交，群内用于快速交流和补充说明
 
 **二维码有效期至 2026 年 7 月 15 日。** 如二维码失效，请在 Issues 中留言，维护者会更新入群方式。
+
+## 相关项目
+
+- [FTShare-python-sdk](https://github.com/FTShare-Lab/FTShare-python-sdk)：FTShare 金融数据 Python SDK，面向开发者编程调用
+- [FTShare-skills](https://github.com/FTShare-Lab/FTShare-skills)：FTShare Agent Skill 仓库，面向数据级 Skill 和投研业务 Skill
 
 ## 按数据目录
 
