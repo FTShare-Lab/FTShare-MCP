@@ -133,7 +133,7 @@ Chinese users are welcome to join the FTShare WeChat community group to discuss 
 > - Advertising, promotion, and unrelated off-topic chat are not allowed
 > - For bugs, feature requests, and tool documentation issues, please open a GitHub Issue first. The group is for quick discussion and follow-up context
 
-**The QR code is valid until July 8, 2026.** If it expires, please open an Issue and the maintainers will update the invitation.
+**The QR code is valid until July 15, 2026.** If it expires, please open an Issue and the maintainers will update the invitation.
 
 ## License
 
