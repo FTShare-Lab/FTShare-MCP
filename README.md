@@ -122,7 +122,7 @@ asyncio.run(main())  # 启动异步程序。
 
 欢迎加入 FTShare 社区交流群，一起讨论 MCP 接入、工具调用、金融数据接口、Agent 投研工作流和项目贡献方向。
 
-<img src="docs/assets/wechat-group.png" alt="FTShare 微信交流群" width="320" />
+<img src="docs/assets/wechat-group-20260715.png" alt="FTShare 微信交流群" width="320" />
 
 > **群规说明**：
 > - 仅限 FTShare 项目、MCP 接入、金融数据接口和 Agent 投研工作流相关讨论

@@ -126,7 +126,7 @@ For the full tool index and individual tool documentation, see the Chinese [READ
 
 Chinese users are welcome to join the FTShare WeChat community group to discuss MCP integration, tool calls, financial data interfaces, Agent research workflows, and contribution directions.
 
-<img src="docs/assets/wechat-group.png" alt="FTShare WeChat community group" width="320" />
+<img src="docs/assets/wechat-group-20260715.png" alt="FTShare WeChat community group" width="320" />
 
 > **Community rules**:
 > - Discussions should be related to FTShare, MCP integration, financial data interfaces, or Agent research workflows
