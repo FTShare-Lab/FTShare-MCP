@@ -133,14 +133,14 @@ For the full tool index and individual tool documentation, see the Chinese [READ
 
 Chinese users are welcome to join the FTShare WeChat community group to discuss MCP integration, tool calls, financial data interfaces, Agent research workflows, and contribution directions.
 
-<img src="docs/assets/wechat-group-20260715.png" alt="FTShare WeChat community group" width="320" />
+<img src="docs/assets/wechat-group-20260721.png" alt="FTShare WeChat community group" width="320" />
 
 > **Community rules**:
 > - Discussions should be related to FTShare, MCP integration, financial data interfaces, or Agent research workflows
 > - Advertising, promotion, and unrelated off-topic chat are not allowed
 > - For bugs, feature requests, and tool documentation issues, please open a GitHub Issue first. The group is for quick discussion and follow-up context
 
-**The QR code is valid until July 15, 2026.** If it expires, please open an Issue and the maintainers will update the invitation.
+**The QR code is valid until July 21, 2026.** If it expires, please open an Issue and the maintainers will update the invitation.
 
 ## License
 
