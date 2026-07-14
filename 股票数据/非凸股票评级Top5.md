@@ -1,4 +1,4 @@
-# 飞兔股票评级Top5（MCP 工具 `ft_stock_rating_top5`）
+# 非凸股票评级Top5（MCP 工具 `ft_stock_rating_top5`）
 
 > **MCP 工具**：`ft_stock_rating_top5`（category: `股票数据/特色数据`）。返回 **markdown 表格文本**（非结构化 JSON）。输入参数 / 输出参数 / 数据样例对照 [ftshare-doc](../../ftshare-doc/api-doc) 原接口。
 

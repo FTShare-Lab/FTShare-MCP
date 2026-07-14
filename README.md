@@ -299,7 +299,7 @@ asyncio.run(main())  # 启动异步程序。
 | `ft_stock_ipos` | 股票IPO | 股票数据 | [股票数据/股票IPO.md](./股票数据/股票IPO.md) |
 | `ft_stock_pledge_detail` | 股权质押明细 | 股票数据 | [股票数据/股权质押明细.md](./股票数据/股权质押明细.md) |
 | `ft_stock_pledge_summary` | 股权质押汇总 | 股票数据 | [股票数据/股权质押汇总.md](./股票数据/股权质押汇总.md) |
-| `ft_stock_rating_top5` | 飞兔股票评级Top5 | 股票数据 | [股票数据/飞兔股票评级Top5.md](./股票数据/飞兔股票评级Top5.md) |
+| `ft_stock_rating_top5` | 非凸股票评级Top5 | 股票数据 | [股票数据/非凸股票评级Top5.md](./股票数据/非凸股票评级Top5.md) |
 | `ft_stock_share_chg` | 股东增减持 | 股票数据 | [股票数据/股东增减持.md](./股票数据/股东增减持.md) |
 | `ft_stock_unlock_by_date_handler` | 限售解禁按日期 | 股票数据 | [股票数据/限售解禁按日期.md](./股票数据/限售解禁按日期.md) |
 | `ft_stock_unlock_handler` | 限售解禁 | 股票数据 | [股票数据/限售解禁.md](./股票数据/限售解禁.md) |
