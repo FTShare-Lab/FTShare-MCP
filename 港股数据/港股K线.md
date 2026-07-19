@@ -1,13 +1,14 @@
 # 港股K线（MCP 工具 `ft_get_hk_candlesticks`）
 
-> **MCP 工具**：`ft_get_hk_candlesticks`（category: `港股数据/行情数据`）。返回 **markdown 表格文本**（非结构化 JSON）。输入参数 / 输出参数 / 数据样例对照 [ftshare-doc](../../ftshare-doc/api-doc) 原接口。
+> **MCP 工具**：`ft_get_hk_candlesticks`（category: `港股数据/行情数据`）。返回统一 MCP 输出：`structuredContent.metadata` + `structuredContent.data`；`content[0].text` 是同值的序列化 JSON，不额外返回 Markdown。输入参数 / 输出参数 / 数据样例见下文。
+> 文中 `Response`、`items`、`records`、`code`、`message` 等名称仅为字段说明；MCP 对外固定为上述 `metadata/data`。
 
-- 描述：按 `trade_code` + 日期范围查询港股 K 线，返回 `HkCandlesticksResponse`（外层含 `trade_code` + `items` 数组）。底层来源表 `hkshareeodprices`。支持前复权/不复权，间隔单位仅支持 day/month/quarter/year（无分钟），`interval_value` 当前仅支持 1。`limit` 为可选保留最近 N 根。
+- 描述：按港股代码和日期范围查询历史 K 线，支持日、月、季和年周期以及前复权和不复权。提示：`interval_value` 仅支持 1；港股代码支持纯数字或 `.HK` 后缀。
 - 数据范围：以服务端返回为准
 - 单次限量：`limit` 可选，无默认值、无上限校验；日 K 在 SQL 层 `LIMIT` 下推，其它周期聚合后内存保留最近 `limit` 根
 - 提示：
   - 对外 v1 仅暴露 GET（底层 v0 同时支持 GET+POST）。
-  - 时间参数为日期（`since_date` / `until_date`，YYYY-MM-DD），非时间戳；与 F3 `hk-stock-candlesticks`（毫秒戳 + 3 天时间窗）是两套独立接口。
+  - 时间参数为日期（`since_date` / `until_date`，YYYY-MM-DD），非时间戳；与 F3 `hk-stock-candlesticks`（毫秒戳，且仅分钟周期最多覆盖 3 个自然日）是两套独立接口。
   - 港股代码内部规范化为 5 位数字 + `.HK`。
   - 复权 `adjust_kind` 默认 forward（前复权），仅 forward / none 两档。
 
@@ -25,10 +26,16 @@
 
 ## 输出参数
 
-| 名称 | 类型 | 默认显示 | 描述 |
-|------|------|---------|------|
-| trade_code | string | Y | 港股代码（5 位数字 + `.HK`） |
-| items | array[HkCandlestick] | Y | K 线数组 |
+> MCP 固定输出信封为 `structuredContent.metadata` + `structuredContent.data`；`content[0].text` 是与其同值的序列化 JSON，不是 Markdown。
+>
+> `items` / `records` / `code` / `message` 等传输字段不会直接出现在 MCP 结果中；分页与截断信息统一归入 `metadata`。
+
+| MCP 字段 | 类型 | 必填 | 描述 |
+|----------|------|------|------|
+| metadata | object | Y | 契约版本、数据来源、工具名、业务口径、总量、分页、返回条数、截断状态及 warnings |
+| data | array | Y | 归一化后的业务数据项；元素字段见下方 |
+
+### data 业务字段
 
 HkCandlestick：
 
@@ -44,7 +51,7 @@ HkCandlestick：
 
 ## 调用方法（MCP）
 
-> MCP 工具名 `ft_get_hk_candlesticks`。MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，再 `tools/call`**，后续请求带该 header。返回 **markdown 表格文本**。
+> MCP 工具名 `ft_get_hk_candlesticks`。MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
 
 **curl**：
 
@@ -52,11 +59,18 @@ HkCandlestick：
 SID=$(curl -sS -m 10 -D - -o /dev/null -X POST <MCP_BASE_URL> \
   -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"t","version":"1"}}}' \
-  | grep -i 'mcp-session-id:' | awk '{print $2}' | tr -d '')
+  | grep -i 'mcp-session-id:' | awk '{print $2}' | tr -d '\r')
+
+curl -fsS -m 10 -o /dev/null -X POST <MCP_BASE_URL> \
+  -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" \
+  -H "Mcp-Session-Id: $SID" \
+  -H "MCP-Protocol-Version: 2025-11-25" \
+  -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
 
 curl -sS -m 10 -X POST <MCP_BASE_URL> \
   -H "Accept: application/json, text/event-stream" -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
+  -H "MCP-Protocol-Version: 2025-11-25" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_get_hk_candlesticks","arguments":{"trade_code": "00700.HK", "interval_unit": "day", "until_date": "2026-06-23"}}}'
 ```
 
@@ -72,8 +86,8 @@ async def main():
         async with ClientSession(r, w) as s:
             await s.initialize()
             res = await s.call_tool('ft_get_hk_candlesticks', {"trade_code": "00700.HK", "interval_unit": "day", "until_date": "2026-06-23"})
-            print(res.content[0].text)   # markdown 表格文本
-
+            print(res.structuredContent)   # 推荐：统一 metadata/data 结构化输出
+            print(res.content[0].text)   # 兼容：与 structuredContent 同值的 JSON 文本
 asyncio.run(main())
 ```
 
