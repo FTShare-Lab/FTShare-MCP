@@ -10,7 +10,7 @@ For international developers, this repository can be understood as **FTShare MCP
 
 > This repository focuses on **MCP tool documentation and integration instructions**. It does not contain the MCP Server source code. The public MCP service is provided by the FTShare data service.
 
-The current service exposes **172 tools**: 165 `ft_*` financial data tools and 7 convenience query tools. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. The live `tools/list` response is the source of truth.
+The current public documentation exposes **171 tools**: 164 `ft_*` financial data tools and 7 convenience query tools. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. The live `tools/list` response is the source of truth.
 
 ## Public MCP Endpoint
 
@@ -189,7 +189,7 @@ asyncio.run(main())
 | Hong Kong Stocks | 7 | [港股数据/](./港股数据/) |
 | Spot Data | 2 | [现货数据/](./现货数据/) |
 | US Stocks | 7 | [美股数据/](./美股数据/) |
-| A-share Stocks | 81 | [股票数据/](./股票数据/) |
+| A-share Stocks | 80 | [股票数据/](./股票数据/) |
 
 ### Convenience query tools
 
