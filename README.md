@@ -3,8 +3,6 @@
 [中文](README.md) | [English](README_EN.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-![MCP](https://img.shields.io/badge/MCP-Streamable_HTTP-168AAD.svg)
-![Tools](https://img.shields.io/badge/tools-172-blue.svg)
 
 FTShare MCP 是面向 AI Agent 的金融数据 MCP 服务，让 Claude Code、Codex、WorkBuddy、OpenClaw、Hermes 等支持 MCP 的客户端，可以通过自然语言调用 FTShare 的行情、财务、宏观、基金、期货、债券、美股和港股数据。
 
