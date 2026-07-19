@@ -3,122 +3,159 @@
 [中文](README.md) | [English](README_EN.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![MCP](https://img.shields.io/badge/MCP-Streamable_HTTP-168AAD)
+![Tools](https://img.shields.io/badge/tools-172-blue)
 
-`FTShare-MCP` 是 FTShare 金融数据能力的 MCP 工具文档与接入说明仓库，面向支持 MCP 的客户端、Agent 应用和自动化投研流程，提供公共 MCP 入口、调用流程、工具索引、参数说明和示例。
+FTShare MCP 是面向 AI Agent 的金融数据 MCP 服务，让 Claude Code、Codex、WorkBuddy、OpenClaw、Hermes 等支持 MCP 的客户端，可以通过自然语言调用 FTShare 的行情、财务、宏观、基金、期货、债券、美股和港股数据。
 
-面向国际开发者，本仓库也可以被理解为 **FTShare MCP tools for financial data, market data, quantitative research and AI Agent investment workflows**。
+> 本仓库提供 MCP 工具文档、参数说明和接入示例，不包含 MCP Server 源码。公共 MCP 服务由 FTShare 数据服务提供。
 
-> 当前仓库重点是 **MCP 工具文档与接入说明**，不包含 MCP Server 源码。公共 MCP 服务由 FTShare 数据服务提供。
+## 当前服务
 
-当前文档重点覆盖 FTShare 正式开放的 **150 个 `ft_*` 金融数据工具**，覆盖行情、财务、宏观、基金、期货、债券、美股、港股等数据；测试、示例或内部辅助工具不作为正式文档入口展示。
+- **服务版本**：FTShare MCP Server `0.1.1`
+- **公共地址**：`https://market.ft.tech/gateway/mcp`
+- **传输协议**：MCP Streamable HTTP
+- **工具数量**：172
+- **工具构成**：165 个 `ft_*` 数据工具 + 7 个便捷查询入口
+- **服务属性**：只读金融数据服务
+- **实时工具定义**：以 MCP `tools/list` 返回结果为准
 
-## MCP 公共入口
+各工具文档中的 `<MCP_BASE_URL>` 均应替换为公共地址。首次直接调用协议时，先通过 `initialize` 获取 `Mcp-Session-Id`，后续请求再携带该会话 ID 调用 `tools/list` 或 `tools/call`。
 
-本文档统一使用 `<MCP_BASE_URL>` 表示 MCP Streamable HTTP 入口。公共 MCP 入口为：
+## 数据能力
+
+- A 股行情、K 线、涨跌停、资金流、龙虎榜、股东和财务数据
+- ETF、指数、基金净值、基金持仓、基金经理和基金公司
+- 港股、美股、期货、债券和贵金属
+- 宏观经济、财经日历、公告、研报和财经新闻
+- 语义新闻检索及面向 Agent 的便捷查询入口
+
+## FTShare 生态中的位置
+
+FTShare 是底层金融数据服务，SDK、MCP 和 Skill 是不同的使用方式：
+
+```text
+FTShare 数据服务
+    ├── FTShare Python SDK   开发者编程调用
+    ├── FTShare MCP          Agent 标准化数据调用
+    └── FTShare Skills       投研任务与业务工作流
+```
+
+MCP 负责让 Agent 获取数据，Skill 负责告诉 Agent 如何完成一项投研任务。
+
+## 快速接入
+
+### Claude Code
 
 ```bash
-MCP_BASE_URL="https://market.ft.tech/gateway/mcp"
+claude mcp add --transport http --scope user ftshare https://market.ft.tech/gateway/mcp
 ```
 
-复制各工具文档示例时，请把 `<MCP_BASE_URL>` 替换为上面的地址。
+进入 Claude Code 后输入 `/mcp`，确认列表中存在 `ftshare`。
 
-- **MCP 入口占位符**：`<MCP_BASE_URL>`（Streamable HTTP）
-- **协议要点**：先 `initialize` 拿 `Mcp-Session-Id`，再 `tools/call`
-- **返回格式**：markdown 表格文本（非结构化 JSON）
-- **查实时 schema**：`tools/list` 返回每个工具的 `inputSchema`
+### Codex
 
-## 适用场景
+在 `~/.codex/config.toml` 中加入：
 
-- Claude Code、Codex、Cursor、OpenClaw 等支持 MCP 的客户端
-- Agent 投研工作流中的金融数据工具调用
-- 自动化行情、财务、宏观、基金、期货、债券、美股、港股数据查询
-- 面向投研、量化研究和金融应用开发的数据接入验证
-
-## 调用流程
-
-1. 确认 MCP 入口：公共环境使用 `https://market.ft.tech/gateway/mcp`，各工具文档中的 `<MCP_BASE_URL>` 都替换为这个地址。
-2. 选择工具：从下方工具索引或 `tools/list` 结果中找到目标 `ft_*` 工具名。
-3. 查看参数：每个工具文档都列出输入参数、是否必填、输出字段和数据样例；`tools/list` 也会返回实时 `inputSchema`。
-4. 初始化会话：第一次请求先调用 MCP `initialize`，拿到 `Mcp-Session-Id`。
-5. 调用工具：后续请求带上 `Mcp-Session-Id`，调用 `tools/call`，其中 `name` 是工具名，`arguments` 是业务参数。
-6. 读取结果：`ft_*` 工具默认返回 markdown 表格文本；如果需要结构化字段，请优先参考对应文档的输出参数表。
-7. 处理错误：HTTP 非 2xx、MCP 协议错误、工具参数错误或服务端业务错误都应在客户端侧捕获并展示；调试时建议先调用 `tools/list` 校验工具名和参数 schema。
-
-## 通用 Demo
-
-下面示例可调用任意 `ft_*` 工具。只需要改 `TOOL_NAME` 和 `TOOL_ARGS`，就可以复用到各个文档里的工具。
-
-### curl
-
-```bash
-# MCP 服务入口；等同于文档里的 <MCP_BASE_URL>。
-MCP_BASE_URL="https://market.ft.tech/gateway/mcp"
-
-# 要调用的 MCP 工具名；可在下方工具索引或 tools/list 结果中查询。
-TOOL_NAME="ft_get_cb_lists_handler"
-
-# 工具业务参数；无参数工具传 {}，有参数时按对应工具文档填写 JSON 对象。
-TOOL_ARGS='{}'
-
-# initialize 请求体；用于创建 MCP 会话。
-INIT_PAYLOAD='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"curl-demo","version":"1.0.0"}}}'
-
-# tools/call 请求体；name 是工具名，arguments 是工具业务参数。
-CALL_PAYLOAD="{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"${TOOL_NAME}\",\"arguments\":${TOOL_ARGS}}}"
-
-# 先调用 initialize，并从响应头中提取 Mcp-Session-Id。
-MCP_SESSION_ID=$(curl -sS -m 10 -D - -o /dev/null -X POST "$MCP_BASE_URL" \
-  -H "Accept: application/json, text/event-stream" \
-  -H "Content-Type: application/json" \
-  -d "$INIT_PAYLOAD" \
-  | awk 'tolower($1)=="mcp-session-id:" {print $2}' \
-  | tr -d '\r')
-
-# 带上 Mcp-Session-Id 调用目标工具；返回内容通常是 markdown 表格文本。
-curl -sS -m 30 -X POST "$MCP_BASE_URL" \
-  -H "Accept: application/json, text/event-stream" \
-  -H "Content-Type: application/json" \
-  -H "Mcp-Session-Id: $MCP_SESSION_ID" \
-  -d "$CALL_PAYLOAD"
+```toml
+[mcp_servers.ftshare]
+url = "https://market.ft.tech/gateway/mcp"
 ```
 
-### Python
+保存后执行 `codex mcp get ftshare` 检查配置。
 
-下面示例使用 Python MCP 客户端库调用任意 `ft_*` 工具。
+### WorkBuddy
 
-依赖安装（Python 3.10+）：`pip install mcp`
+在 `~/.workbuddy/mcp.json` 中加入：
 
-```python
-import asyncio  # 运行异步 main 函数。
-from mcp import ClientSession  # MCP 客户端会话对象，用于 initialize、tools/list、tools/call。
-from mcp.client.streamable_http import streamablehttp_client  # Streamable HTTP 客户端连接工具。
-
-MCP_BASE_URL = "https://market.ft.tech/gateway/mcp"  # 实际公共 MCP 入口；等同于文档里的 <MCP_BASE_URL>。
-TOOL_NAME = "ft_get_cb_lists_handler"  # 要调用的 MCP 工具名；可在下方工具索引或 tools/list 结果中查询。
-TOOL_ARGS = {}  # 工具业务参数；无参数工具传空字典，有参数时按对应工具文档填写。
-
-async def main():  # 定义异步入口函数。
-    async with streamablehttp_client(  # 建立 MCP Streamable HTTP 连接。
-        MCP_BASE_URL,  # MCP 服务入口地址。
-    ) as (read_stream, write_stream, _):  # read_stream 读响应，write_stream 写请求，第三个返回值此处无需使用。
-        async with ClientSession(  # 创建 MCP 客户端会话。
-            read_stream,  # 服务端响应读取流。
-            write_stream,  # 客户端请求写入流。
-        ) as session:  # session 用于调用 MCP 协议方法。
-            await session.initialize()  # 初始化协议并完成会话握手。
-
-            tools = await session.list_tools()  # 可选：获取当前服务端可用工具列表。
-            print([tool.name for tool in tools.tools])  # 可选：打印工具名，确认 TOOL_NAME 是否存在。
-
-            result = await session.call_tool(  # 调用指定 MCP 工具。
-                TOOL_NAME,  # params.name：工具名。
-                TOOL_ARGS,  # params.arguments：传给工具的业务参数。
-            )  # result.content 通常包含工具返回内容。
-
-            print(result.content[0].text)  # 打印第一个文本结果；ft_* 工具默认返回 markdown 表格。
-
-asyncio.run(main())  # 启动异步程序。
+```json
+{
+  "mcpServers": {
+    "ftshare": {
+      "type": "streamableHttp",
+      "url": "https://market.ft.tech/gateway/mcp",
+      "timeout": 30000,
+      "disabled": false
+    }
+  }
+}
 ```
+
+其他支持 Streamable HTTP MCP 的客户端，也可以使用同一个公共地址接入。
+
+## 使用示例
+
+配置完成后，可以直接向 Agent 提问：
+
+- 使用 FTShare 查询贵州茅台最近 5 个交易日的日 K 线
+- 查询今天 A 股涨停和跌停数量
+- 查询沪深 300 对应的 ETF
+- 查询某只基金的净值、持仓和基金经理
+- 搜索最近与机器人概念相关的财经新闻
+
+## 返回结构
+
+从 `0.1.1` 开始，所有工具统一返回结构化 JSON。成功结果同时提供 `structuredContent`，以及 `content[0].text` 中的同值 JSON 文本：
+
+```json
+{
+  "metadata": {
+    "schema_version": "1.0",
+    "source": "ftshare",
+    "tool": "ft_get_fund_list",
+    "operation": "get_fund_list",
+    "total": 1,
+    "pagination": {
+      "supported": true,
+      "page": 1,
+      "page_size": 1,
+      "pages": 1,
+      "has_more": false
+    },
+    "returned": 1,
+    "truncated": false,
+    "warnings": []
+  },
+  "data": []
+}
+```
+
+Agent 和应用程序应优先读取 `structuredContent.data`；分页、截断和告警信息位于 `structuredContent.metadata`。
+
+## 错误处理
+
+参数或业务错误通过 `isError=true` 返回，`content[0].text` 中包含可机器解析的错误对象：
+
+```json
+{
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "field": "page_size",
+    "message": "参数值不满足约束",
+    "retryable": false
+  }
+}
+```
+
+| 错误码 | 含义 |
+|---|---|
+| `MISSING_PARAMETER` | 缺少必填或条件必填参数 |
+| `INVALID_TYPE` | 参数类型不正确 |
+| `UNKNOWN_PARAMETER` | 传入了 Schema 未声明的参数 |
+| `INVALID_ARGUMENT` | 参数值或业务条件不满足 |
+| `UPSTREAM_UNAVAILABLE` | 上游数据服务暂时不可用 |
+
+调用工具时应严格遵守 `tools/list` 返回的 `inputSchema`。成功时优先读取 `structuredContent`，失败时先判断 `isError`，再解析错误对象中的 `code` 和 `retryable`。
+
+## 0.1.1 更新
+
+- 工具数量由 159 调整为 172
+- 移除 `echo`、`aggregate_demo` 两个示例工具
+- 新增 15 个公募基金工具
+- 所有工具统一提供 `title`、`inputSchema`、`outputSchema` 和只读 annotations
+- 所有成功结果统一提供 `structuredContent`
+- 未声明参数、缺少必填参数和超限参数在调用前被拒绝
+- 业务错误统一返回 `isError=true` 和结构化错误码
 
 ## 社区交流
 
@@ -144,7 +181,7 @@ asyncio.run(main())  # 启动异步程序。
 |------|--------|----------|
 | ETF专题 | 8 | [ETF专题/](./ETF专题/) |
 | 债券专题 | 2 | [债券专题/](./债券专题/) |
-| 公募基金 | 5 | [公募基金/](./公募基金/) |
+| 公募基金 | 20 | [公募基金/](./公募基金/)；新增工具的独立文档正在同步 |
 | 外汇数据 | 1 | [外汇数据/](./外汇数据/) |
 | 大模型语料 | 5 | [大模型语料/](./大模型语料/) |
 | 宏观经济 | 17 | [宏观经济/](./宏观经济/) |
@@ -154,11 +191,20 @@ asyncio.run(main())  # 启动异步程序。
 | 现货数据 | 2 | [现货数据/](./现货数据/) |
 | 美股数据 | 7 | [美股数据/](./美股数据/) |
 | 股票数据 | 81 | [股票数据/](./股票数据/) |
+| 便捷查询入口 | 7 | 通过 `tools/list` 查看实时 Schema |
+| **合计** | **172** | 165 个数据工具 + 7 个便捷查询入口 |
 
 ## 工具索引
 
 | MCP 工具 | 标题 | 数据目录 | 文档 |
 |----------|------|----------|------|
+| `capital_flow` | 资金流 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `daily_ohlc` | 日频 OHLC | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `intraday_kline` | 分时与分钟 K 线 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `margin` | 融资融券 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `report_announcement_list` | 公告列表 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `report_announcement_summary` | 公告摘要 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `semantic_search_news` | 新闻语义检索 | 便捷查询入口 | 实时 Schema：`tools/list` |
 | `ft_etf_adjust_factor` | ETF复权因子 | ETF专题 | [ETF专题/ETF复权因子.md](./ETF专题/ETF复权因子.md) |
 | `ft_etf_components_all` | ETF成份列表 | ETF专题 | [ETF专题/ETF成份列表.md](./ETF专题/ETF成份列表.md) |
 | `ft_etf_description_all` | ETF基础信息 | ETF专题 | [ETF专题/ETF基础信息.md](./ETF专题/ETF基础信息.md) |
@@ -174,6 +220,21 @@ asyncio.run(main())  # 启动异步程序。
 | `ft_get_fund_nav` | 基金净值 | 公募基金 | [公募基金/基金净值.md](./公募基金/基金净值.md) |
 | `ft_get_fund_overview` | 基金总览 | 公募基金 | [公募基金/基金总览.md](./公募基金/基金总览.md) |
 | `ft_get_fund_support_symbols` | 基金支持标的 | 公募基金 | [公募基金/基金支持标的.md](./公募基金/基金支持标的.md) |
+| `ft_get_fund_asset_allocation` | 基金资产配置 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_classification` | 基金分类 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_company` | 基金公司 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_daily` | 基金行情日线 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_fee` | 基金费率 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_holder_structure` | 基金持有人结构 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_index_fund` | 指数跟踪基金 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_list` | 基金列表 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_manager` | 基金经理任职关系 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_net_value` | 基金净值明细 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_net_value_performance` | 基金净值收益表现 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_new_found` | 基金新发 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_portfolio` | 基金持仓明细 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_risk_level` | 基金风险等级 | 公募基金 | 实时 Schema：`tools/list` |
+| `ft_get_fund_share` | 基金份额 | 公募基金 | 实时 Schema：`tools/list` |
 | `ft_consumer_forex_gold_monthly` | 外汇黄金 | 外汇数据 | [外汇数据/外汇黄金.md](./外汇数据/外汇黄金.md) |
 | `ft_semantic_search_news_handler` | 新闻语义搜索 | 大模型语料 | [大模型语料/新闻语义搜索.md](./大模型语料/新闻语义搜索.md) |
 | `ft_shareholders_meeting` | 股东大会 | 大模型语料 | [大模型语料/股东大会.md](./大模型语料/股东大会.md) |
