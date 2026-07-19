@@ -90,4 +90,3 @@ async def main():
             print(res.content[0].text)   # 兼容：与 structuredContent 同值的 JSON 文本
 asyncio.run(main())
 ```
-

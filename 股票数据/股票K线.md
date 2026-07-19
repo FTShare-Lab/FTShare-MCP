@@ -10,16 +10,16 @@
   - `symbol`、`interval_unit`、`until_ts_millis` 必填。
   - since/until 是**毫秒时间戳**；分钟 K 的首尾时间戳转换为 Asia/Shanghai 日期后，最多涉及 3 个不同日期。
   - 分钟 K 长周期数据需按自然日期分段调用。
-  - 默认不复权（None），可设 Forward 前复权 / Backward 后复权。
+  - 默认不复权（`none`），可设 `forward` 前复权或 `backward` 后复权。
 
 ## 输入参数
 
 | 名称 | 类型 | 必选 | 描述 |
 |------|------|------|------|
 | symbol | SymbolKey | Y | 标的代码，如 000001.SZ |
-| interval_unit | enum | Y | 周期单位：Minute/Day/Week/Month/Year |
+| interval_unit | enum | Y | 周期单位：`minute` / `day` / `week` / `month` / `year` |
 | interval_value | int | N | 间隔数值（默认1，如 Day+1=日K，Minute+5=5分钟） |
-| adjust_kind | enum | N | 复权：None(默认,除权)/Forward(前复权)/Backward(后复权) |
+| adjust_kind | enum | N | 复权：`none`（默认）/ `forward`（前复权）/ `backward`（后复权） |
 | since_ts_millis | DateTime(ms) | N | 开始时间戳（毫秒）；分钟 K 按 Asia/Shanghai 自然日期计，首尾均计入，最多覆盖 3 天 |
 | until_ts_millis | DateTime(ms) | Y | 结束时间戳（毫秒） |
 | limit | int | N | 返回条数上限 |

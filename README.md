@@ -4,63 +4,115 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-`FTShare-MCP` 是 FTShare 金融数据能力的 MCP 工具文档与接入说明仓库，面向支持 MCP 的客户端、Agent 应用和自动化投研流程，提供公共 MCP 入口、调用流程、工具索引、参数说明和示例。
+FTShare MCP 是面向 AI Agent 的金融数据 MCP 服务，让 Claude Code、Codex、WorkBuddy、OpenClaw、Hermes 等支持 MCP 的客户端，可以通过自然语言调用 FTShare 的行情、财务、宏观、基金、期货、债券、美股和港股数据。
 
-> 当前仓库重点是 **MCP 工具文档与接入说明**，不包含 MCP Server 源码。公共 MCP 服务由 FTShare 数据服务提供。
+> 本仓库提供 MCP 工具文档、参数说明和接入示例，不包含 MCP Server 源码。公共 MCP 服务由 FTShare 数据服务提供。
 
-当前文档覆盖 FTShare 正式开放的 **150 个 `ft_*` 金融数据工具**，并补充新版 MCP Server 提供的服务端行情聚合工具，覆盖行情、财务、宏观、基金、期货、债券、美股、港股等数据；测试、示例或内部辅助工具不作为正式文档入口展示。
+## 当前服务
 
-## MCP 公共入口
+- **服务版本**：FTShare MCP Server `0.1.1`
+- **公共地址**：`https://market.ft.tech/gateway/mcp`
+- **传输协议**：MCP Streamable HTTP
+- **工具数量**：172
+- **工具构成**：165 个 `ft_*` 数据工具 + 7 个便捷查询入口
+- **服务属性**：只读金融数据服务
+- **实时工具定义**：以 MCP `tools/list` 返回结果为准
 
-本文档统一使用 `<MCP_BASE_URL>` 表示 MCP Streamable HTTP 入口。公共 MCP 入口为：
+各工具文档中的 `<MCP_BASE_URL>` 均应替换为公共地址。首次直接调用协议时，先通过 `initialize` 获取 `Mcp-Session-Id`，后续请求再携带该会话 ID 调用 `tools/list` 或 `tools/call`。
 
-```bash
-MCP_BASE_URL="https://market.ft.tech/gateway/mcp"
+## 数据能力
+
+- A 股行情、K 线、涨跌停、资金流、龙虎榜、股东和财务数据
+- ETF、指数、基金净值、基金持仓、基金经理和基金公司
+- 港股、美股、期货、债券和贵金属
+- 宏观经济、财经日历、公告、研报和财经新闻
+- 语义新闻检索及面向 Agent 的便捷查询入口
+
+## FTShare 生态中的位置
+
+FTShare 是底层金融数据服务，SDK、MCP 和 Skill 是不同的使用方式：
+
+```text
+FTShare 数据服务
+    ├── FTShare Python SDK   开发者编程调用
+    ├── FTShare MCP          Agent 标准化数据调用
+    └── FTShare Skills       投研任务与业务工作流
 ```
 
-复制各工具文档示例时，请把 `<MCP_BASE_URL>` 替换为上面的地址。
+MCP 负责让 Agent 获取数据，Skill 负责告诉 Agent 如何完成一项投研任务。
 
-- **MCP 入口占位符**：`<MCP_BASE_URL>`（Streamable HTTP）
-- **协议要点**：先 `initialize` 协商版本并获取 `Mcp-Session-Id`，发送 `notifications/initialized`，再携带 Session ID 与 `MCP-Protocol-Version` 调用工具
-- **返回格式**：统一返回一个 JSON `TextContent` 和同值的 `structuredContent`；不额外返回 Markdown
-- **查实时 descriptor**：`tools/list` 返回每个工具的 `title`、`inputSchema`、`outputSchema`、`annotations` 和 `_meta`
+## 快速接入
 
-> **部署状态说明**：本文以下输出格式对应配套新版 `ftshare-mcp-server` 的统一契约。
-> 公共入口是否已完成升级应以实时 `tools/list` / `tools/call` 为准；如果某个已记录工具
-> 仍缺少 `outputSchema` 或成功结果中没有 `structuredContent`，表示该环境尚未部署配套新版服务。
+### Claude Code
 
-## 适用场景
+```bash
+claude mcp add --transport http --scope user ftshare https://market.ft.tech/gateway/mcp
+```
 
-- Claude Code、Codex、Cursor、OpenClaw 等支持 MCP 的客户端
-- Agent 投研工作流中的金融数据工具调用
-- 自动化行情、财务、宏观、基金、期货、债券、美股、港股数据查询
-- 面向投研、量化研究和金融应用开发的数据接入验证
+进入 Claude Code 后输入 `/mcp`，确认列表中存在 `ftshare`。
 
-## 调用流程
+### Codex
 
-1. 确认 MCP 入口：公共环境使用 `https://market.ft.tech/gateway/mcp`，各工具文档中的 `<MCP_BASE_URL>` 都替换为这个地址。
-2. 选择工具：从下方工具索引或 `tools/list` 结果中找到目标 MCP 工具名。
-3. 查看参数：每个工具文档都列出输入参数、是否必填、输出字段和数据样例；`tools/list` 也会返回实时 `inputSchema`。
-4. 初始化会话：第一次请求先调用 MCP `initialize`，拿到 `Mcp-Session-Id`。
-5. 完成初始化：发送 `notifications/initialized` 通知，成功时 HTTP 返回 202 且响应体为空。
-6. 调用工具：后续请求带上 `Mcp-Session-Id` 和协商后的 `MCP-Protocol-Version`，调用 `tools/call`，其中 `name` 是工具名，`arguments` 是业务参数。
-7. 读取结果：优先读取 `result.structuredContent`；`result.content[0].text` 是与其相同的序列化 JSON，供暂不支持结构化结果的客户端兼容读取。
-8. 处理错误：未知工具或请求结构错误属于 JSON-RPC 协议错误；参数校验、API 调用和业务执行错误位于 `result` 中，并设置 `isError: true`。
+在 `~/.codex/config.toml` 中加入：
 
-## 统一输出格式
+```toml
+[mcp_servers.ftshare]
+url = "https://market.ft.tech/gateway/mcp"
+```
 
-所有工具使用同一结构化输出 Schema。不同工具的业务字段放在 `data` 数组中：
+保存后执行 `codex mcp get ftshare` 检查配置。
+
+### WorkBuddy
+
+在 `~/.workbuddy/mcp.json` 中加入：
+
+```json
+{
+  "mcpServers": {
+    "ftshare": {
+      "type": "streamableHttp",
+      "url": "https://market.ft.tech/gateway/mcp",
+      "timeout": 30000,
+      "disabled": false
+    }
+  }
+}
+```
+
+其他支持 Streamable HTTP MCP 的客户端，也可以使用同一个公共地址接入。
+
+## 协议调用说明
+
+- 直接调用协议时，先发送 `initialize` 获取 `Mcp-Session-Id`。
+- 初始化后发送 `notifications/initialized`，后续请求同时携带 Session ID 和协商后的 `MCP-Protocol-Version`。
+- `tools/list` 返回每个工具的 `title`、`inputSchema`、`outputSchema`、只读 `annotations` 和 `_meta.securitySchemes`。
+- 调用成功时优先读取 `result.structuredContent`；`result.content[0].text` 是同值的序列化 JSON。
+- 参数校验、上游服务及业务执行错误位于 `result` 中，并设置 `isError=true`。
+
+## 使用示例
+
+配置完成后，可以直接向 Agent 提问：
+
+- 使用 FTShare 查询贵州茅台最近 5 个交易日的日 K 线
+- 查询今天 A 股涨停和跌停数量
+- 查询沪深 300 对应的 ETF
+- 查询某只基金的净值、持仓和基金经理
+- 搜索最近与机器人概念相关的财经新闻
+
+## 返回结构
+
+从 `0.1.1` 开始，所有工具统一返回结构化 JSON。成功结果同时提供 `structuredContent`，以及 `content[0].text` 中的同值 JSON 文本：
 
 ```json
 {
   "metadata": {
     "schema_version": "1.0",
     "source": "ftshare",
-    "tool": "ft_get_cb_lists_handler",
-    "operation": "get_cb_lists_handler",
+    "tool": "ft_get_fund_list",
+    "operation": "get_fund_list",
     "total": 1,
     "pagination": {
-      "supported": false,
+      "supported": true,
       "page": 1,
       "page_size": 1,
       "pages": 1,
@@ -70,182 +122,64 @@ MCP_BASE_URL="https://market.ft.tech/gateway/mcp"
     "truncated": false,
     "warnings": []
   },
-  "data": [
-    {
-      "cb_id": 110001,
-      "full_name": "示例可转债",
-      "stock_id": 600001,
-      "exchange": 3553
-    }
-  ]
+  "data": []
 }
 ```
 
-完整的 `tools/call` 成功结果如下。`content` 只有一个 JSON 文本块，解析后的值与 `structuredContent` 完全相同：
+Agent 和应用程序应优先读取 `structuredContent.data`；分页、截断和告警信息位于 `structuredContent.metadata`。
+
+## 错误处理
+
+参数或业务错误通过 `isError=true` 返回，`content[0].text` 中包含可机器解析的错误对象：
 
 ```json
 {
-  "jsonrpc": "2.0",
-  "id": 2,
-  "result": {
-    "content": [
-      {
-        "type": "text",
-        "text": "{\"metadata\":{\"schema_version\":\"1.0\",\"source\":\"ftshare\",\"tool\":\"ft_get_cb_lists_handler\",\"operation\":\"get_cb_lists_handler\",\"total\":1,\"pagination\":{\"supported\":false,\"page\":1,\"page_size\":1,\"pages\":1,\"has_more\":false},\"returned\":1,\"truncated\":false,\"warnings\":[]},\"data\":[{\"cb_id\":110001}]}"
-      }
-    ],
-    "structuredContent": {
-      "metadata": {
-        "schema_version": "1.0",
-        "source": "ftshare",
-        "tool": "ft_get_cb_lists_handler",
-        "operation": "get_cb_lists_handler",
-        "total": 1,
-        "pagination": {
-          "supported": false,
-          "page": 1,
-          "page_size": 1,
-          "pages": 1,
-          "has_more": false
-        },
-        "returned": 1,
-        "truncated": false,
-        "warnings": []
-      },
-      "data": [{"cb_id": 110001}]
-    },
-    "isError": false
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "field": "page_size",
+    "message": "参数值不满足约束",
+    "retryable": false
   }
 }
 ```
 
-- `metadata.schema_version`：输出契约版本；当前为 `1.0`。
-- `metadata.source`：数据来源；当前为 `ftshare`。
-- `metadata.tool`：实际调用的 MCP 工具名。
-- `metadata.operation`：实际执行业务口径；`ft_*` 工具使用对应 SDK method。
-- `metadata.total`：匹配总条数；总量缺失时为本地截断前条数。
-- `metadata.pagination`：分页状态，包含 `supported`、`page`、`page_size`、`pages`、`has_more`。
-- `metadata.returned`：本次实际放入 `data` 的条数。
-- `metadata.truncated`：是否因服务端条目或输出体积限制被截断。
-- `metadata.warnings`：去重、结构差异或截断等提示；无提示时为空数组。
-- `data`：业务数据数组，字段以对应工具文档的“输出参数”为准。
-- 原接口的 `items` / `records` 映射到 `data`；`total_items` / `total_pages` 映射到 `metadata.total` / `metadata.pagination.pages`。
-- Markdown 不是 MCP 结构化工具结果的必需格式。为避免重复 payload 和读取歧义，当前默认不返回 Markdown 展示块。
+| 错误码 | 含义 |
+|---|---|
+| `MISSING_PARAMETER` | 缺少必填或条件必填参数 |
+| `INVALID_TYPE` | 参数类型不正确 |
+| `UNKNOWN_PARAMETER` | 传入了 Schema 未声明的参数 |
+| `INVALID_ARGUMENT` | 参数值或业务条件不满足 |
+| `UPSTREAM_UNAVAILABLE` | 上游数据服务暂时不可用 |
 
-工具执行错误不套用成功结果的 `outputSchema`：错误结果设置 `isError: true`，省略 `structuredContent`，并在 `content[0].text` 中返回脱敏错误文本；可结构化的错误会使用 `{"error":{"code","message","field?","retryable","details?"}}` JSON。条件多选一未满足时不指定误导性的单一 `field`，而是在 `details.required_any_of` 中列出可选参数组合。未知工具或非法 JSON-RPC 请求仍按协议错误返回。
+调用工具时应严格遵守 `tools/list` 返回的 `inputSchema`。成功时优先读取 `structuredContent`，失败时先判断 `isError`，再解析错误对象中的 `code` 和 `retryable`。
 
-## Tool descriptor
+## 0.1.1 更新
 
-`tools/list` 返回的每个正式工具 descriptor 与 MCP / OpenAI Apps SDK 的只读工具语义对齐：
-
-- `title`：面向用户的人类可读标题。
-- `inputSchema`：Draft 2020-12 输入约束；未声明字段会被拒绝。服务会移除 Rust 整数 `format`、`$schema` 和 `default:null`，并补齐多口径工具的条件必填及整数上下界。
-- `outputSchema`：统一的 `metadata/data` 成功结果契约。
-- `annotations`：`readOnlyHint=true`、`destructiveHint=false`、`openWorldHint=true`。
-- `_meta.securitySchemes`：无鉴权服务声明为 `[{"type":"noauth"}]`，用于 OpenAI 客户端兼容。
-
-`structuredContent.metadata` 是模型可见的业务结果字段；descriptor 的 sibling `_meta` 是客户端扩展信息。两者名称相近，但层级、用途和可见性不同。
-
-运行时参数校验器由最终公开的 `inputSchema` 编译得到；分页、limit、时间戳和多口径条件必填会在发起请求前拒绝。日期有效性、代码市场匹配和时间跨度等业务规则仍会在对应工具业务层继续校验。
-
-## 通用 Demo
-
-下面示例可调用任意已记录工具。只需要改 `TOOL_NAME` 和 `TOOL_ARGS`，就可以复用到各个文档里的工具。
-
-### curl
-
-```bash
-# MCP 服务入口；等同于文档里的 <MCP_BASE_URL>。
-MCP_BASE_URL="https://market.ft.tech/gateway/mcp"
-
-# 要调用的 MCP 工具名；可在下方工具索引或 tools/list 结果中查询。
-TOOL_NAME="ft_get_cb_lists_handler"
-
-# 工具业务参数；无参数工具传 {}，有参数时按对应工具文档填写 JSON 对象。
-TOOL_ARGS='{}'
-
-# initialize 请求体；用于创建 MCP 会话。
-INIT_PAYLOAD='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"curl-demo","version":"1.0.0"}}}'
-
-# tools/call 请求体；name 是工具名，arguments 是工具业务参数。
-CALL_PAYLOAD="{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"${TOOL_NAME}\",\"arguments\":${TOOL_ARGS}}}"
-
-# 先调用 initialize，并从响应头中提取 Mcp-Session-Id。
-MCP_SESSION_ID=$(curl -sS -m 10 -D - -o /dev/null -X POST "$MCP_BASE_URL" \
-  -H "Accept: application/json, text/event-stream" \
-  -H "Content-Type: application/json" \
-  -d "$INIT_PAYLOAD" \
-  | awk 'tolower($1)=="mcp-session-id:" {print $2}' \
-  | tr -d '\r')
-
-# 通知服务端初始化已完成；成功时返回 HTTP 202 和空响应体。
-curl -fsS -m 10 -o /dev/null -X POST "$MCP_BASE_URL" \
-  -H "Accept: application/json, text/event-stream" \
-  -H "Content-Type: application/json" \
-  -H "Mcp-Session-Id: $MCP_SESSION_ID" \
-  -H "MCP-Protocol-Version: 2025-11-25" \
-  -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
-
-# 初始化完成后调用目标工具；优先读取 result.structuredContent。
-curl -sS -m 30 -X POST "$MCP_BASE_URL" \
-  -H "Accept: application/json, text/event-stream" \
-  -H "Content-Type: application/json" \
-  -H "Mcp-Session-Id: $MCP_SESSION_ID" \
-  -H "MCP-Protocol-Version: 2025-11-25" \
-  -d "$CALL_PAYLOAD"
-```
-
-### Python
-
-下面示例使用 Python MCP 客户端库调用任意 `ft_*` 工具。
-
-依赖安装（Python 3.10+）：`pip install mcp`
-
-```python
-import asyncio  # 运行异步 main 函数。
-from mcp import ClientSession  # MCP 客户端会话对象，用于 initialize、tools/list、tools/call。
-from mcp.client.streamable_http import streamablehttp_client  # Streamable HTTP 客户端连接工具。
-
-MCP_BASE_URL = "https://market.ft.tech/gateway/mcp"  # 实际公共 MCP 入口；等同于文档里的 <MCP_BASE_URL>。
-TOOL_NAME = "ft_get_cb_lists_handler"  # 要调用的 MCP 工具名；可在下方工具索引或 tools/list 结果中查询。
-TOOL_ARGS = {}  # 工具业务参数；无参数工具传空字典，有参数时按对应工具文档填写。
-
-async def main():  # 定义异步入口函数。
-    async with streamablehttp_client(  # 建立 MCP Streamable HTTP 连接。
-        MCP_BASE_URL,  # MCP 服务入口地址。
-    ) as (read_stream, write_stream, _):  # read_stream 读响应，write_stream 写请求，第三个返回值此处无需使用。
-        async with ClientSession(  # 创建 MCP 客户端会话。
-            read_stream,  # 服务端响应读取流。
-            write_stream,  # 客户端请求写入流。
-        ) as session:  # session 用于调用 MCP 协议方法。
-            await session.initialize()  # 初始化协议并完成会话握手。
-
-            tools = await session.list_tools()  # 可选：获取当前服务端可用工具列表。
-            print([tool.name for tool in tools.tools])  # 可选：打印工具名，确认 TOOL_NAME 是否存在。
-
-            result = await session.call_tool(  # 调用指定 MCP 工具。
-                TOOL_NAME,  # params.name：工具名。
-                TOOL_ARGS,  # params.arguments：传给工具的业务参数。
-            )  # result.structuredContent 是统一 metadata/data 结构化输出。
-
-            print(result.structuredContent)  # 推荐：统一 metadata/data 结构化输出。
-            print(result.content[0].text)  # 兼容：与 structuredContent 同值的 JSON 文本。
-
-asyncio.run(main())  # 启动异步程序。
-```
+- 工具数量由 159 调整为 172
+- 移除 `echo`、`aggregate_demo` 两个示例工具
+- 新增 15 个公募基金工具
+- 所有工具统一提供 `title`、`inputSchema`、`outputSchema` 和只读 annotations
+- 所有成功结果统一提供 `structuredContent`
+- 未声明参数、缺少必填参数和超限参数在调用前被拒绝
+- 业务错误统一返回 `isError=true` 和结构化错误码
 
 ## 社区交流
 
 欢迎加入 FTShare 社区交流群，一起讨论 MCP 接入、工具调用、金融数据接口、Agent 投研工作流和项目贡献方向。
 
-<img src="docs/assets/wechat-group.png" alt="FTShare 微信交流群" width="320" />
+<img src="docs/assets/wechat-group-20260721.png" alt="FTShare 微信交流群" width="320" />
 
 > **群规说明**：
 > - 仅限 FTShare 项目、MCP 接入、金融数据接口和 Agent 投研工作流相关讨论
 > - 禁止广告、推广、无关闲聊
 > - Bug、功能需求和工具文档问题，建议优先在 GitHub Issues 中提交，群内用于快速交流和补充说明
 
-如二维码失效，请在 Issues 中留言，维护者会更新入群方式。
+**二维码有效期至 2026 年 7 月 21 日。** 如二维码失效，请在 Issues 中留言，维护者会更新入群方式。
+
+## 相关项目
+
+- [FTShare-python-sdk](https://github.com/FTShare-Lab/FTShare-python-sdk)：FTShare 金融数据 Python SDK，面向开发者编程调用
+- [FTShare-skills](https://github.com/FTShare-Lab/FTShare-skills)：FTShare Agent Skill 仓库，面向数据级 Skill 和投研业务 Skill
 
 ## 按数据目录
 
@@ -255,20 +189,28 @@ asyncio.run(main())  # 启动异步程序。
 | 债券专题 | 2 | [债券专题/](./债券专题/) |
 | 公募基金 | 20 | [公募基金/](./公募基金/) |
 | 外汇数据 | 1 | [外汇数据/](./外汇数据/) |
-| 大模型语料 | 6 | [大模型语料/](./大模型语料/) |
+| 大模型语料 | 5 | [大模型语料/](./大模型语料/) |
 | 宏观经济 | 17 | [宏观经济/](./宏观经济/) |
 | 指数专题 | 8 | [指数专题/](./指数专题/) |
 | 期货数据 | 7 | [期货数据/](./期货数据/) |
 | 港股数据 | 7 | [港股数据/](./港股数据/) |
 | 现货数据 | 2 | [现货数据/](./现货数据/) |
 | 美股数据 | 7 | [美股数据/](./美股数据/) |
-| 股票数据 | 83 | [股票数据/](./股票数据/) |
+| 股票数据 | 81 | [股票数据/](./股票数据/) |
+| 便捷查询入口 | 7 | 通过 `tools/list` 查看实时 Schema |
+| **合计** | **172** | 165 个数据工具 + 7 个便捷查询入口 |
 
 ## 工具索引
 
 | MCP 工具 | 标题 | 数据目录 | 文档 |
 |----------|------|----------|------|
-| `intraday_kline` | 分时与分钟 K 线 | 股票数据 | [股票数据/分时与分钟K线.md](./股票数据/分时与分钟K线.md) |
+| `capital_flow` | 资金流 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `daily_ohlc` | 日频 OHLC | 便捷查询入口 | [股票数据/日频OHLC.md](./股票数据/日频OHLC.md) |
+| `intraday_kline` | 分时与分钟 K 线 | 便捷查询入口 | [股票数据/分时与分钟K线.md](./股票数据/分时与分钟K线.md) |
+| `margin` | 融资融券 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `report_announcement_list` | 公告列表 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `report_announcement_summary` | 公告摘要 | 便捷查询入口 | [大模型语料/公告摘要.md](./大模型语料/公告摘要.md) |
+| `semantic_search_news` | 新闻语义检索 | 便捷查询入口 | 实时 Schema：`tools/list` |
 | `ft_etf_adjust_factor` | ETF复权因子 | ETF专题 | [ETF专题/ETF复权因子.md](./ETF专题/ETF复权因子.md) |
 | `ft_etf_components_all` | ETF成份列表 | ETF专题 | [ETF专题/ETF成份列表.md](./ETF专题/ETF成份列表.md) |
 | `ft_etf_description_all` | ETF基础信息 | ETF专题 | [ETF专题/ETF基础信息.md](./ETF专题/ETF基础信息.md) |
@@ -284,6 +226,21 @@ asyncio.run(main())  # 启动异步程序。
 | `ft_get_fund_nav` | 基金净值 | 公募基金 | [公募基金/基金净值.md](./公募基金/基金净值.md) |
 | `ft_get_fund_overview` | 基金总览 | 公募基金 | [公募基金/基金总览.md](./公募基金/基金总览.md) |
 | `ft_get_fund_support_symbols` | 基金支持标的 | 公募基金 | [公募基金/基金支持标的.md](./公募基金/基金支持标的.md) |
+| `ft_get_fund_asset_allocation` | 基金资产配置 | 公募基金 | [公募基金/基金资产配置.md](./公募基金/基金资产配置.md) |
+| `ft_get_fund_classification` | 基金分类 | 公募基金 | [公募基金/基金分类.md](./公募基金/基金分类.md) |
+| `ft_get_fund_company` | 基金公司 | 公募基金 | [公募基金/基金公司.md](./公募基金/基金公司.md) |
+| `ft_get_fund_daily` | 基金行情日线 | 公募基金 | [公募基金/基金行情日线.md](./公募基金/基金行情日线.md) |
+| `ft_get_fund_fee` | 基金费率 | 公募基金 | [公募基金/基金费率.md](./公募基金/基金费率.md) |
+| `ft_get_fund_holder_structure` | 基金持有人结构 | 公募基金 | [公募基金/基金持有人结构.md](./公募基金/基金持有人结构.md) |
+| `ft_get_fund_index_fund` | 指数跟踪基金 | 公募基金 | [公募基金/指数跟踪基金.md](./公募基金/指数跟踪基金.md) |
+| `ft_get_fund_list` | 基金列表 | 公募基金 | [公募基金/基金列表.md](./公募基金/基金列表.md) |
+| `ft_get_fund_manager` | 基金经理任职关系 | 公募基金 | [公募基金/基金经理任职关系.md](./公募基金/基金经理任职关系.md) |
+| `ft_get_fund_net_value` | 基金净值明细 | 公募基金 | [公募基金/基金净值明细.md](./公募基金/基金净值明细.md) |
+| `ft_get_fund_net_value_performance` | 基金净值收益表现 | 公募基金 | [公募基金/基金净值收益表现.md](./公募基金/基金净值收益表现.md) |
+| `ft_get_fund_new_found` | 基金新发 | 公募基金 | [公募基金/基金新发.md](./公募基金/基金新发.md) |
+| `ft_get_fund_portfolio` | 基金持仓明细 | 公募基金 | [公募基金/基金持仓明细.md](./公募基金/基金持仓明细.md) |
+| `ft_get_fund_risk_level` | 基金风险等级 | 公募基金 | [公募基金/基金风险等级.md](./公募基金/基金风险等级.md) |
+| `ft_get_fund_share` | 基金份额 | 公募基金 | [公募基金/基金份额.md](./公募基金/基金份额.md) |
 | `ft_consumer_forex_gold_monthly` | 外汇黄金 | 外汇数据 | [外汇数据/外汇黄金.md](./外汇数据/外汇黄金.md) |
 | `ft_semantic_search_news_handler` | 新闻语义搜索 | 大模型语料 | [大模型语料/新闻语义搜索.md](./大模型语料/新闻语义搜索.md) |
 | `ft_shareholders_meeting` | 股东大会 | 大模型语料 | [大模型语料/股东大会.md](./大模型语料/股东大会.md) |
@@ -409,7 +366,7 @@ asyncio.run(main())  # 启动异步程序。
 | `ft_stock_ipos` | 股票IPO | 股票数据 | [股票数据/股票IPO.md](./股票数据/股票IPO.md) |
 | `ft_stock_pledge_detail` | 股权质押明细 | 股票数据 | [股票数据/股权质押明细.md](./股票数据/股权质押明细.md) |
 | `ft_stock_pledge_summary` | 股权质押汇总 | 股票数据 | [股票数据/股权质押汇总.md](./股票数据/股权质押汇总.md) |
-| `ft_stock_rating_top5` | 飞兔股票评级Top5 | 股票数据 | [股票数据/飞兔股票评级Top5.md](./股票数据/飞兔股票评级Top5.md) |
+| `ft_stock_rating_top5` | 非凸股票评级Top5 | 股票数据 | [股票数据/非凸股票评级Top5.md](./股票数据/非凸股票评级Top5.md) |
 | `ft_stock_share_chg` | 股东增减持 | 股票数据 | [股票数据/股东增减持.md](./股票数据/股东增减持.md) |
 | `ft_stock_unlock_by_date_handler` | 限售解禁按日期 | 股票数据 | [股票数据/限售解禁按日期.md](./股票数据/限售解禁按日期.md) |
 | `ft_stock_unlock_handler` | 限售解禁 | 股票数据 | [股票数据/限售解禁.md](./股票数据/限售解禁.md) |

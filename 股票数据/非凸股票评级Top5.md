@@ -1,13 +1,13 @@
-# 飞兔股票评级Top5（MCP 工具 `ft_stock_rating_top5`）
+# 非凸股票评级Top5（MCP 工具 `ft_stock_rating_top5`）
 
 > **MCP 工具**：`ft_stock_rating_top5`（category: `股票数据/特色数据`）。返回统一 MCP 输出：`structuredContent.metadata` + `structuredContent.data`；`content[0].text` 是同值的序列化 JSON，不额外返回 Markdown。输入参数 / 输出参数 / 数据样例见下文。
 > 文中 `Response`、`items`、`records`、`code`、`message` 等名称仅为字段说明；MCP 对外固定为上述 `metadata/data`。
 
-- 描述：查询指定日期券单评级分市场 Top5（飞兔数据来源）。按 `date` 返回该日期各分市场（all/xshg/xshe/bjse）评级 Top5 列表，含标的 symbolid、交易所 exid、等级、年化收益率、胜率等。档位 `variant` 默认 `300001`（30w01），可传 `300000`（30w）等；`type` 控制市场筛选，默认 `all`。提示：`date` 必填，格式 YYYYMMDD；`variant` 默认 `300001`；`type` 默认 `all`，可选 xshg / xshe / bjse。
+- 描述：查询指定日期券单评级分市场 Top5（非凸数据来源）。按 `date` 返回该日期各分市场（all/xshg/xshe/bjse）评级 Top5 列表，含标的 symbolid、交易所 exid、等级、年化收益率、胜率等。档位 `variant` 默认 `300001`（30w01），可传 `300000`（30w）等；`type` 控制市场筛选，默认 `all`。提示：`date` 必填，格式 YYYYMMDD；`variant` 默认 `300001`；`type` 默认 `all`，可选 xshg / xshe / bjse。
 - 数据范围：最新一期（按请求 date）
 - 单次限量：每个市场 Top5
 - 提示：
-  - 数据来自飞兔（来源标识 feitu）。
+  - 数据来自非凸（来源标识 feitu）。
   - `date` 必填，格式 YYYYMMDD。
   - `variant` 默认 `300001`；`type` 默认 `all`，可选 xshg / xshe / bjse。
 
@@ -39,6 +39,11 @@ StockRatingTop5Response：
 | by_market | array[StockRatingMarket] | Y | 按市场分组的 Top5 列表 |
 
 StockRatingMarket：
+
+| 名称 | 类型 | 默认显示 | 描述 |
+|------|------|---------|------|
+| market | StockRatingMarketKind | Y | 市场：all / xshg / xshe / bjse |
+| items | array[StockRatingRow] | Y | 该市场 Top5 记录 |
 
 StockRatingRow：
 

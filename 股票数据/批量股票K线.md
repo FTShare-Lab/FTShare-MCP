@@ -16,9 +16,9 @@
 | 名称 | 类型 | 必选 | 描述 |
 |------|------|------|------|
 | symbols | array[SymbolKey] | Y | 标的代码列表，如 ["000001.SZ","600000.SH"] |
-| interval_unit | enum | Y | 周期单位：Minute/Day/Week/Month/Year |
+| interval_unit | enum | Y | 周期单位：`minute` / `day` / `week` / `month` / `year` |
 | interval_value | int | N | 间隔数值（默认1） |
-| adjust_kind | enum | N | 复权：None(默认)/Forward(前复权)/Backward(后复权) |
+| adjust_kind | enum | N | 复权：`none`（默认）/ `forward`（前复权）/ `backward`（后复权） |
 | since_ts_millis | DateTime(ms) | N | 开始时间戳（毫秒）；分钟 K 按 Asia/Shanghai 自然日期计，首尾均计入，最多覆盖 3 天 |
 | until_ts_millis | DateTime(ms) | Y | 结束时间戳（毫秒） |
 | limit | int | N | 每标的返回条数上限 |

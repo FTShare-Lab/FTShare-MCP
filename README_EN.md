@@ -6,9 +6,11 @@
 
 `FTShare-MCP` is the MCP tool documentation and integration guide for FTShare financial data capabilities. It is designed for MCP-compatible clients, Agent applications, and automated investment research workflows. This repository provides the public MCP endpoint, calling workflow, tool index, parameter descriptions, and examples.
 
+For international developers, this repository can be understood as **FTShare MCP tools for financial data, market data, quantitative research, and AI Agent investment workflows**.
+
 > This repository focuses on **MCP tool documentation and integration instructions**. It does not contain the MCP Server source code. The public MCP service is provided by the FTShare data service.
 
-The current documentation covers **150 officially documented `ft_*` financial data tools** and the server-level market aggregation tools provided by the new MCP Server. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. Testing, demo, or internal helper tools are not listed as official documentation entries.
+The current service exposes **172 tools**: 165 `ft_*` financial data tools and 7 convenience query tools. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. The live `tools/list` response is the source of truth.
 
 ## Public MCP Endpoint
 
@@ -180,20 +182,26 @@ asyncio.run(main())
 | Bonds | 2 | [债券专题/](./债券专题/) |
 | Public Funds | 20 | [公募基金/](./公募基金/) |
 | FX Data | 1 | [外汇数据/](./外汇数据/) |
-| LLM Corpus | 6 | [大模型语料/](./大模型语料/) |
+| LLM Corpus | 5 | [大模型语料/](./大模型语料/) |
 | Macro Economy | 17 | [宏观经济/](./宏观经济/) |
 | Index Data | 8 | [指数专题/](./指数专题/) |
 | Futures Data | 7 | [期货数据/](./期货数据/) |
 | Hong Kong Stocks | 7 | [港股数据/](./港股数据/) |
 | Spot Data | 2 | [现货数据/](./现货数据/) |
 | US Stocks | 7 | [美股数据/](./美股数据/) |
-| A-share Stocks | 83 | [股票数据/](./股票数据/) |
+| A-share Stocks | 81 | [股票数据/](./股票数据/) |
 
-### Server-level market tools
+### Convenience query tools
 
 | MCP Tool | Title | Documentation |
 |----------|-------|---------------|
+| `capital_flow` | Capital Flow | Live schema: `tools/list` |
+| `daily_ohlc` | Daily OHLC | [股票数据/日频OHLC.md](./股票数据/日频OHLC.md) |
 | `intraday_kline` | Intraday Price and Minute K-line | [股票数据/分时与分钟K线.md](./股票数据/分时与分钟K线.md) |
+| `margin` | Margin Trading | Live schema: `tools/list` |
+| `report_announcement_list` | Announcement List | Live schema: `tools/list` |
+| `report_announcement_summary` | Announcement Summary | [大模型语料/公告摘要.md](./大模型语料/公告摘要.md) |
+| `semantic_search_news` | Semantic News Search | Live schema: `tools/list` |
 
 For the full tool index and individual tool documentation, see the Chinese [README.md](README.md) and the category documents. The tool names, parameter names, and examples are language-independent.
 
@@ -205,18 +213,23 @@ For the full tool index and individual tool documentation, see the Chinese [READ
 - Some tools have time-window, pagination, quota, or permission constraints.
 - Access quota, permissions, and commercial use of FTShare data interfaces are subject to FTShare data service terms.
 
+## Related Projects
+
+- [FTShare-python-sdk](https://github.com/FTShare-Lab/FTShare-python-sdk): FTShare financial data Python SDK for developer-facing data access
+- [FTShare-skills](https://github.com/FTShare-Lab/FTShare-skills): FTShare Agent Skills repository for data-level Skills and investment research workflow Skills
+
 ## Community
 
 Chinese users are welcome to join the FTShare WeChat community group to discuss MCP integration, tool calls, financial data interfaces, Agent research workflows, and contribution directions.
 
-<img src="docs/assets/wechat-group.png" alt="FTShare WeChat community group" width="320" />
+<img src="docs/assets/wechat-group-20260721.png" alt="FTShare WeChat community group" width="320" />
 
 > **Community rules**:
 > - Discussions should be related to FTShare, MCP integration, financial data interfaces, or Agent research workflows
 > - Advertising, promotion, and unrelated off-topic chat are not allowed
 > - For bugs, feature requests, and tool documentation issues, please open a GitHub Issue first. The group is for quick discussion and follow-up context
 
-If the QR code expires, please open an Issue and the maintainers will update the invitation.
+**The QR code is valid until July 21, 2026.** If it expires, please open an Issue and the maintainers will update the invitation.
 
 ## License
 
