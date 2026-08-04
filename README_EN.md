@@ -185,11 +185,11 @@ asyncio.run(main())
 | LLM Corpus | 5 | [大模型语料/](./大模型语料/) |
 | Macro Economy | 17 | [宏观经济/](./宏观经济/) |
 | Index Data | 8 | [指数专题/](./指数专题/) |
-| Futures Data | 7 | [期货数据/](./期货数据/) |
+| Futures Data | 4 | [期货数据/](./期货数据/) |
 | Hong Kong Stocks | 7 | [港股数据/](./港股数据/) |
 | Spot Data | 2 | [现货数据/](./现货数据/) |
 | US Stocks | 7 | [美股数据/](./美股数据/) |
-| A-share Stocks | 80 | [股票数据/](./股票数据/) |
+| A-share Stocks | 83 | [股票数据/](./股票数据/) |
 
 ### Convenience query tools
 
