@@ -10,7 +10,7 @@ For international developers, this repository can be understood as **FTShare MCP
 
 > This repository focuses on **MCP tool documentation and integration instructions**. It does not contain the MCP Server source code. The public MCP service is provided by the FTShare data service.
 
-The current public documentation exposes **172 tools**: 165 `ft_*` financial data tools and 7 convenience query tools. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. The live `tools/list` response is the source of truth.
+The current public documentation exposes **202 tools**: 195 `ft_*` financial data tools and 7 convenience query tools. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. The live `tools/list` response is the source of truth.
 
 ## Public MCP Endpoint
 
@@ -47,7 +47,7 @@ When copying examples from tool documents, replace `<MCP_BASE_URL>` with the URL
 4. Initialize a session by calling MCP `initialize` and reading `Mcp-Session-Id`.
 5. Complete initialization by sending `notifications/initialized`; a successful HTTP response is 202 with an empty body.
 6. Call `tools/call` with `Mcp-Session-Id` and the negotiated `MCP-Protocol-Version`, where `name` is the tool name and `arguments` is the business parameter object.
-7. Read `result.structuredContent` first. `result.content[0].text` is the serialized JSON form of the same value for clients that do not yet consume structured results.
+7. Read `result.structured_content` first. `result.content[0].text` is the serialized JSON form of the same value for clients that do not yet consume structured results.
 8. Unknown tools and malformed request shapes are JSON-RPC protocol errors. Input validation, upstream API failures, and business execution failures are returned in `result` with `isError: true`.
 
 ## Unified Output Format
@@ -150,25 +150,25 @@ curl -sS -m 30 -X POST "$MCP_BASE_URL" \
 
 ### Python
 
-Install dependency: `pip install mcp`
+The examples use the official MCP Python SDK 2.x API. Install the verified version: `pip install "mcp==2.0.0"`
 
 ```python
 import asyncio
 from mcp import ClientSession
-from mcp.client.streamable_http import streamablehttp_client
+from mcp.client.streamable_http import streamable_http_client
 
 MCP_BASE_URL = "https://market.ft.tech/gateway/mcp"
 TOOL_NAME = "ft_get_cb_lists_handler"
 TOOL_ARGS = {}
 
 async def main():
-    async with streamablehttp_client(MCP_BASE_URL) as (read_stream, write_stream, _):
+    async with streamable_http_client(MCP_BASE_URL) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             tools = await session.list_tools()
             print([tool.name for tool in tools.tools])
             result = await session.call_tool(TOOL_NAME, TOOL_ARGS)
-            print(result.structuredContent)
+            print(result.structured_content)
             print(result.content[0].text)  # Compatible JSON text identical to structuredContent.
 
 asyncio.run(main())
@@ -178,18 +178,18 @@ asyncio.run(main())
 
 | Category | Tool Count | Documentation |
 |----------|------------|---------------|
-| ETF | 8 | [ETF专题/](./ETF专题/) |
-| Bonds | 2 | [债券专题/](./债券专题/) |
+| ETF | 10 | [ETF专题/](./ETF专题/) |
+| Bonds | 4 | [债券专题/](./债券专题/) |
 | Public Funds | 20 | [公募基金/](./公募基金/) |
 | FX Data | 1 | [外汇数据/](./外汇数据/) |
 | LLM Corpus | 5 | [大模型语料/](./大模型语料/) |
 | Macro Economy | 17 | [宏观经济/](./宏观经济/) |
-| Index Data | 8 | [指数专题/](./指数专题/) |
+| Index Data | 10 | [指数专题/](./指数专题/) |
 | Futures Data | 4 | [期货数据/](./期货数据/) |
-| Hong Kong Stocks | 7 | [港股数据/](./港股数据/) |
+| Hong Kong Stocks | 13 | [港股数据/](./港股数据/) |
 | Spot Data | 2 | [现货数据/](./现货数据/) |
 | US Stocks | 7 | [美股数据/](./美股数据/) |
-| A-share Stocks | 84 | [股票数据/](./股票数据/) |
+| A-share Stocks | 102 | [股票数据/](./股票数据/) |
 
 ### Convenience query tools
 
