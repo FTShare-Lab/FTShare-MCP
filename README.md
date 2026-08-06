@@ -13,8 +13,8 @@ FTShare MCP 是面向 AI Agent 的金融数据 MCP 服务，让 Claude Code、Co
 - **服务版本**：FTShare MCP Server `0.1.1`
 - **公共地址**：`https://market.ft.tech/gateway/mcp`
 - **传输协议**：MCP Streamable HTTP
-- **工具数量**：171
-- **工具构成**：164 个 `ft_*` 数据工具 + 7 个便捷查询入口
+- **工具数量**：199
+- **工具构成**：194 个 `ft_*` 数据工具 + 5 个便捷查询入口
 - **服务属性**：只读金融数据服务
 - **实时工具定义**：以 MCP `tools/list` 返回结果为准
 
@@ -86,8 +86,10 @@ url = "https://market.ft.tech/gateway/mcp"
 - 直接调用协议时，先发送 `initialize` 获取 `Mcp-Session-Id`。
 - 初始化后发送 `notifications/initialized`，后续请求同时携带 Session ID 和协商后的 `MCP-Protocol-Version`。
 - `tools/list` 返回每个工具的 `title`、`inputSchema`、`outputSchema`、只读 `annotations` 和 `_meta.securitySchemes`。
-- 调用成功时优先读取 `result.structuredContent`；`result.content[0].text` 是同值的序列化 JSON。
+- 直接读取 JSON-RPC 响应时，调用成功后优先读取 `result.structuredContent`；`result.content[0].text` 是同值的序列化 JSON。使用 MCP Python SDK 时，对应属性名为 `result.structured_content`。
 - 参数校验、上游服务及业务执行错误位于 `result` 中，并设置 `isError=true`。
+
+各工具文档中的 Python 示例基于官方 MCP Python SDK 2.x API，运行前先执行 `pip install "mcp==2.0.0"`。
 
 ## 使用示例
 
@@ -155,9 +157,12 @@ Agent 和应用程序应优先读取 `structuredContent.data`；分页、截断�
 
 ## 0.1.1 更新
 
-- 当前公开工具索引调整为 171
+- 当前公开工具索引调整为 199
 - 移除 `echo`、`aggregate_demo` 两个示例工具
 - 新增 15 个公募基金工具
+- 新增 6 个 ETF/可转债/指数 K 线工具、6 个港股财报工具，以及 10 个股票基础、参考和特色数据工具（含大宗交易、一致行动人等）
+- 新增 8 个 `ft_daec_*` 行情工具（历史成交价、前收、全市场快照、涨跌分布等），由上游统一以 HTTP 提供
+- 移除 `intraday_kline` 的 `daec_price`/`daec_minute_ohlc` 与 `daily_ohlc` 的 `daec_stock` 口径，相关数据改由独立 `ft_daec_*` 工具提供
 - 所有工具统一提供 `title`、`inputSchema`、`outputSchema` 和只读 annotations
 - 所有成功结果统一提供 `structuredContent`
 - 未声明参数、缺少必填参数和超限参数在调用前被拒绝
@@ -185,32 +190,30 @@ Agent 和应用程序应优先读取 `structuredContent.data`；分页、截断�
 
 | 大类 | 工具数 | 文档目录 |
 |------|--------|----------|
-| ETF专题 | 8 | [ETF专题/](./ETF专题/) |
-| 债券专题 | 2 | [债券专题/](./债券专题/) |
+| ETF专题 | 10 | [ETF专题/](./ETF专题/) |
+| 债券专题 | 4 | [债券专题/](./债券专题/) |
 | 公募基金 | 20 | [公募基金/](./公募基金/) |
 | 外汇数据 | 1 | [外汇数据/](./外汇数据/) |
 | 大模型语料 | 5 | [大模型语料/](./大模型语料/) |
 | 宏观经济 | 17 | [宏观经济/](./宏观经济/) |
-| 指数专题 | 8 | [指数专题/](./指数专题/) |
-| 期货数据 | 7 | [期货数据/](./期货数据/) |
-| 港股数据 | 7 | [港股数据/](./港股数据/) |
+| 指数专题 | 10 | [指数专题/](./指数专题/) |
+| 期货数据 | 4 | [期货数据/](./期货数据/) |
+| 港股数据 | 13 | [港股数据/](./港股数据/) |
 | 现货数据 | 2 | [现货数据/](./现货数据/) |
 | 美股数据 | 7 | [美股数据/](./美股数据/) |
-| 股票数据 | 80 | [股票数据/](./股票数据/) |
-| 便捷查询入口 | 7 | 通过 `tools/list` 查看实时 Schema |
-| **合计** | **171** | 164 个数据工具 + 7 个便捷查询入口 |
+| 股票数据 | 101 | [股票数据/](./股票数据/) |
+| 便捷查询入口 | 5 | [便捷查询入口/](./便捷查询入口/)；实时约束仍以 `tools/list` 为准 |
+| **合计** | **199** | 194 个数据工具 + 5 个便捷查询入口 |
 
 ## 工具索引
 
 | MCP 工具 | 标题 | 数据目录 | 文档 |
 |----------|------|----------|------|
-| `capital_flow` | 资金流 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `capital_flow` | 资金流 | 便捷查询入口 | [便捷查询入口/资金流.md](./便捷查询入口/资金流.md) |
 | `daily_ohlc` | 日频 OHLC | 便捷查询入口 | [股票数据/日频OHLC.md](./股票数据/日频OHLC.md) |
 | `intraday_kline` | 分时与分钟 K 线 | 便捷查询入口 | [股票数据/分时与分钟K线.md](./股票数据/分时与分钟K线.md) |
-| `margin` | 融资融券 | 便捷查询入口 | 实时 Schema：`tools/list` |
-| `report_announcement_list` | 公告列表 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `report_announcement_list` | 公告列表 | 便捷查询入口 | [便捷查询入口/公告列表.md](./便捷查询入口/公告列表.md) |
 | `report_announcement_summary` | 公告摘要 | 便捷查询入口 | [大模型语料/公告摘要.md](./大模型语料/公告摘要.md) |
-| `semantic_search_news` | 新闻语义检索 | 便捷查询入口 | 实时 Schema：`tools/list` |
 | `ft_etf_adjust_factor` | ETF复权因子 | ETF专题 | [ETF专题/ETF复权因子.md](./ETF专题/ETF复权因子.md) |
 | `ft_etf_components_all` | ETF成份列表 | ETF专题 | [ETF专题/ETF成份列表.md](./ETF专题/ETF成份列表.md) |
 | `ft_etf_description_all` | ETF基础信息 | ETF专题 | [ETF专题/ETF基础信息.md](./ETF专题/ETF基础信息.md) |
@@ -247,134 +250,164 @@ Agent 和应用程序应优先读取 `structuredContent.data`；分页、截断�
 | `ft_stock_announcements` | 公告列表 | 大模型语料 | [大模型语料/公告列表.md](./大模型语料/公告列表.md) |
 | `ft_stock_reports` | 研报列表 | 大模型语料 | [大模型语料/研报列表.md](./大模型语料/研报列表.md) |
 | `ft_type_reports` | 研报分类 | 大模型语料 | [大模型语料/研报分类.md](./大模型语料/研报分类.md) |
-| `ft_baidu_financial_calendar` | 百度财经日历 | 宏观经济 | [宏观经济/百度财经日历.md](./宏观经济/百度财经日历.md) |
-| `ft_consumer_credit_monthly` | 社融信贷 | 宏观经济 | [宏观经济/社融信贷.md](./宏观经济/社融信贷.md) |
-| `ft_consumer_customs_trade_monthly` | 进出口 | 宏观经济 | [宏观经济/进出口.md](./宏观经济/进出口.md) |
-| `ft_consumer_fiscal_revenue_monthly` | 财政收入 | 宏观经济 | [宏观经济/财政收入.md](./宏观经济/财政收入.md) |
-| `ft_consumer_fixed_asset_monthly` | 固定资产投资 | 宏观经济 | [宏观经济/固定资产投资.md](./宏观经济/固定资产投资.md) |
-| `ft_consumer_gdp_quarterly` | GDP | 宏观经济 | [宏观经济/GDP.md](./宏观经济/GDP.md) |
-| `ft_consumer_industrial_added_value_monthly` | 工业增加值 | 宏观经济 | [宏观经济/工业增加值.md](./宏观经济/工业增加值.md) |
-| `ft_consumer_money_supply_monthly` | 货币供应 | 宏观经济 | [宏观经济/货币供应.md](./宏观经济/货币供应.md) |
-| `ft_consumer_pmi_monthly` | PMI | 宏观经济 | [宏观经济/PMI.md](./宏观经济/PMI.md) |
-| `ft_consumer_ppi_monthly` | PPI | 宏观经济 | [宏观经济/PPI.md](./宏观经济/PPI.md) |
-| `ft_consumer_price_index_monthly` | CPI | 宏观经济 | [宏观经济/CPI.md](./宏观经济/CPI.md) |
-| `ft_consumer_retail_sales_monthly` | 社零 | 宏观经济 | [宏观经济/社零.md](./宏观经济/社零.md) |
-| `ft_lpr_monthly` | LPR | 宏观经济 | [宏观经济/LPR.md](./宏观经济/LPR.md) |
-| `ft_reserve_ratio_monthly` | 存款准备金率 | 宏观经济 | [宏观经济/存款准备金率.md](./宏观经济/存款准备金率.md) |
-| `ft_tax_revenue_monthly` | 税收 | 宏观经济 | [宏观经济/税收.md](./宏观经济/税收.md) |
-| `ft_us_economic` | 美国经济指标 | 宏观经济 | [宏观经济/美国经济指标.md](./宏观经济/美国经济指标.md) |
-| `ft_wallstreetcn_financial_calendar` | 华尔街见闻财经日历 | 宏观经济 | [宏观经济/华尔街见闻财经日历.md](./宏观经济/华尔街见闻财经日历.md) |
-| `ft_global_index_daily_kline` | 全球指数日K线 | 指数专题 | [指数专题/全球指数日K线.md](./指数专题/全球指数日K线.md) |
-| `ft_index_description_all` | 指数基础信息 | 指数专题 | [指数专题/指数基础信息.md](./指数专题/指数基础信息.md) |
-| `ft_index_description_list_handler` | 中证指数描述列表 | 指数专题 | [指数专题/中证指数描述列表.md](./指数专题/中证指数描述列表.md) |
-| `ft_index_weight_list_handler` | 指数权重列表 | 指数专题 | [指数专题/指数权重列表.md](./指数专题/指数权重列表.md) |
-| `ft_index_weight_summary_handler` | 指数权重汇总 | 指数专题 | [指数专题/指数权重汇总.md](./指数专题/指数权重汇总.md) |
-| `ft_sw_industry_constituent_history` | 申万行业成份股历史 | 指数专题 | [指数专题/申万行业成份股历史.md](./指数专题/申万行业成份股历史.md) |
-| `ft_sw_industry_daily_metrics` | 申万行业日度指标 | 指数专题 | [指数专题/申万行业日度指标.md](./指数专题/申万行业日度指标.md) |
-| `ft_sw_industry_overview` | 申万行业总览 | 指数专题 | [指数专题/申万行业总览.md](./指数专题/申万行业总览.md) |
+| `ft_baidu_financial_calendar` | 百度财经日历 | 宏观经济/国内宏观 | [宏观经济/国内宏观/百度财经日历.md](./宏观经济/国内宏观/百度财经日历.md) |
+| `ft_consumer_credit_monthly` | 社融信贷 | 宏观经济/国内宏观 | [宏观经济/国内宏观/社融信贷.md](./宏观经济/国内宏观/社融信贷.md) |
+| `ft_consumer_customs_trade_monthly` | 进出口 | 宏观经济/国内宏观 | [宏观经济/国内宏观/进出口.md](./宏观经济/国内宏观/进出口.md) |
+| `ft_consumer_fiscal_revenue_monthly` | 财政收入 | 宏观经济/国内宏观 | [宏观经济/国内宏观/财政收入.md](./宏观经济/国内宏观/财政收入.md) |
+| `ft_consumer_fixed_asset_monthly` | 固定资产投资 | 宏观经济/国内宏观 | [宏观经济/国内宏观/固定资产投资.md](./宏观经济/国内宏观/固定资产投资.md) |
+| `ft_consumer_gdp_quarterly` | GDP | 宏观经济/国内宏观 | [宏观经济/国内宏观/GDP.md](./宏观经济/国内宏观/GDP.md) |
+| `ft_consumer_industrial_added_value_monthly` | 工业增加值 | 宏观经济/国内宏观 | [宏观经济/国内宏观/工业增加值.md](./宏观经济/国内宏观/工业增加值.md) |
+| `ft_consumer_money_supply_monthly` | 货币供应 | 宏观经济/国内宏观 | [宏观经济/国内宏观/货币供应.md](./宏观经济/国内宏观/货币供应.md) |
+| `ft_consumer_pmi_monthly` | PMI | 宏观经济/国内宏观 | [宏观经济/国内宏观/PMI.md](./宏观经济/国内宏观/PMI.md) |
+| `ft_consumer_ppi_monthly` | PPI | 宏观经济/国内宏观 | [宏观经济/国内宏观/PPI.md](./宏观经济/国内宏观/PPI.md) |
+| `ft_consumer_price_index_monthly` | CPI | 宏观经济/国内宏观 | [宏观经济/国内宏观/CPI.md](./宏观经济/国内宏观/CPI.md) |
+| `ft_consumer_retail_sales_monthly` | 社零 | 宏观经济/国内宏观 | [宏观经济/国内宏观/社零.md](./宏观经济/国内宏观/社零.md) |
+| `ft_lpr_monthly` | LPR | 宏观经济/国内宏观 | [宏观经济/国内宏观/LPR.md](./宏观经济/国内宏观/LPR.md) |
+| `ft_reserve_ratio_monthly` | 存款准备金率 | 宏观经济/国内宏观 | [宏观经济/国内宏观/存款准备金率.md](./宏观经济/国内宏观/存款准备金率.md) |
+| `ft_tax_revenue_monthly` | 税收 | 宏观经济/国内宏观 | [宏观经济/国内宏观/税收.md](./宏观经济/国内宏观/税收.md) |
+| `ft_us_economic` | 美国经济指标 | 宏观经济/国际宏观 | [宏观经济/国际宏观/美国经济指标.md](./宏观经济/国际宏观/美国经济指标.md) |
+| `ft_wallstreetcn_financial_calendar` | 华尔街见闻财经日历 | 宏观经济/国内宏观 | [宏观经济/国内宏观/华尔街见闻财经日历.md](./宏观经济/国内宏观/华尔街见闻财经日历.md) |
+| `ft_global_index_daily_kline` | 全球指数日K线 | 指数专题/指数行情 | [指数专题/指数行情/全球指数日K线.md](./指数专题/指数行情/全球指数日K线.md) |
+| `ft_index_description_all` | 指数基础信息 | 指数专题/指数基本信息 | [指数专题/指数基本信息/指数基础信息.md](./指数专题/指数基本信息/指数基础信息.md) |
+| `ft_index_description_list_handler` | 中证指数描述列表 | 指数专题/指数基本信息 | [指数专题/指数基本信息/中证指数描述列表.md](./指数专题/指数基本信息/中证指数描述列表.md) |
+| `ft_index_weight_list_handler` | 指数权重列表 | 指数专题/指数成分和权重 | [指数专题/指数成分和权重/指数权重列表.md](./指数专题/指数成分和权重/指数权重列表.md) |
+| `ft_index_weight_summary_handler` | 指数权重汇总 | 指数专题/指数成分和权重 | [指数专题/指数成分和权重/指数权重汇总.md](./指数专题/指数成分和权重/指数权重汇总.md) |
+| `ft_sw_industry_constituent_history` | 申万行业成份股历史 | 指数专题/申万行业 | [指数专题/申万行业/申万行业成份股历史.md](./指数专题/申万行业/申万行业成份股历史.md) |
+| `ft_sw_industry_daily_metrics` | 申万行业日度指标 | 指数专题/申万行业 | [指数专题/申万行业/申万行业日度指标.md](./指数专题/申万行业/申万行业日度指标.md) |
+| `ft_sw_industry_overview` | 申万行业总览 | 指数专题/申万行业 | [指数专题/申万行业/申万行业总览.md](./指数专题/申万行业/申万行业总览.md) |
 | `ft_futures_contract_kline` | 期货合约K线 | 期货数据 | [期货数据/期货合约K线.md](./期货数据/期货合约K线.md) |
 | `ft_get_china_futures_base_data_handler` | 中国期货基础数据 | 期货数据 | [期货数据/中国期货基础数据.md](./期货数据/中国期货基础数据.md) |
 | `ft_get_china_futures_lists_handler` | 中国期货列表 | 期货数据 | [期货数据/中国期货列表.md](./期货数据/中国期货列表.md) |
 | `ft_get_eastmoney_futures_position` | 东方财富期货持仓 | 期货数据 | [期货数据/东方财富期货持仓.md](./期货数据/东方财富期货持仓.md) |
-| `ft_major_contract` | 重大合同 | 期货数据 | [期货数据/重大合同.md](./期货数据/重大合同.md) |
-| `ft_major_contract_by_symbol` | 重大合同按标的 | 期货数据 | [期货数据/重大合同按标的.md](./期货数据/重大合同按标的.md) |
-| `ft_major_contract_summary` | 重大合同汇总 | 期货数据 | [期货数据/重大合同汇总.md](./期货数据/重大合同汇总.md) |
-| `ft_get_company_hk` | 港股公司信息 | 港股数据 | [港股数据/港股公司信息.md](./港股数据/港股公司信息.md) |
-| `ft_get_eastmoney_hk_index_daily_kline` | 东方财富港股指数日K | 港股数据 | [港股数据/东方财富港股指数日K.md](./港股数据/东方财富港股指数日K.md) |
-| `ft_get_hk_basinfo` | 港股个股信息 | 港股数据 | [港股数据/港股个股信息.md](./港股数据/港股个股信息.md) |
-| `ft_get_hk_candlesticks` | 港股K线 | 港股数据 | [港股数据/港股K线.md](./港股数据/港股K线.md) |
-| `ft_get_hk_valuatnanalyd` | 港股估值分析 | 港股数据 | [港股数据/港股估值分析.md](./港股数据/港股估值分析.md) |
-| `ft_get_market_cap_hk` | 港股市值 | 港股数据 | [港股数据/港股市值.md](./港股数据/港股市值.md) |
-| `ft_hk_cashflow` | 港股现金流量表 | 港股数据 | [港股数据/港股现金流量表.md](./港股数据/港股现金流量表.md) |
+| `ft_major_contract` | 重大合同 | 股票数据/参考数据 | [股票数据/参考数据/重大合同.md](./股票数据/参考数据/重大合同.md) |
+| `ft_major_contract_by_symbol` | 重大合同按标的 | 股票数据/参考数据 | [股票数据/参考数据/重大合同按标的.md](./股票数据/参考数据/重大合同按标的.md) |
+| `ft_major_contract_summary` | 重大合同汇总 | 股票数据/参考数据 | [股票数据/参考数据/重大合同汇总.md](./股票数据/参考数据/重大合同汇总.md) |
+| `ft_get_company_hk` | 港股公司信息 | 港股数据/基础数据 | [港股数据/基础数据/港股公司信息.md](./港股数据/基础数据/港股公司信息.md) |
+| `ft_get_eastmoney_hk_index_daily_kline` | 东方财富港股指数日K | 港股数据/行情数据 | [港股数据/行情数据/东方财富港股指数日K.md](./港股数据/行情数据/东方财富港股指数日K.md) |
+| `ft_get_hk_basinfo` | 港股个股信息 | 港股数据/基础数据 | [港股数据/基础数据/港股个股信息.md](./港股数据/基础数据/港股个股信息.md) |
+| `ft_get_hk_candlesticks` | 港股K线 | 港股数据/行情数据 | [港股数据/行情数据/港股K线.md](./港股数据/行情数据/港股K线.md) |
+| `ft_get_hk_valuatnanalyd` | 港股估值分析 | 港股数据/行情数据 | [港股数据/行情数据/港股估值分析.md](./港股数据/行情数据/港股估值分析.md) |
+| `ft_get_market_cap_hk` | 港股市值 | 港股数据/行情数据 | [港股数据/行情数据/港股市值.md](./港股数据/行情数据/港股市值.md) |
+| `ft_hk_cashflow` | 港股现金流量表 | 港股数据/财务数据 | [港股数据/财务数据/港股现金流量表.md](./港股数据/财务数据/港股现金流量表.md) |
 | `ft_get_bullion_price` | 贵金属价格 | 现货数据 | [现货数据/贵金属价格.md](./现货数据/贵金属价格.md) |
 | `ft_get_bullion_support_symbol` | 贵金属支持标的 | 现货数据 | [现货数据/贵金属支持标的.md](./现货数据/贵金属支持标的.md) |
-| `ft_eastmoney_us_stock_daily_kline` | 东方财富美股日OHLC | 美股数据 | [美股数据/东方财富美股日OHLC.md](./美股数据/东方财富美股日OHLC.md) |
-| `ft_eastmoney_us_stock_latest_kline` | 东方财富美股最新OHLC | 美股数据 | [美股数据/东方财富美股最新OHLC.md](./美股数据/东方财富美股最新OHLC.md) |
-| `ft_eastmoney_us_stock_list` | 东方财富美股列表 | 美股数据 | [美股数据/东方财富美股列表.md](./美股数据/东方财富美股列表.md) |
-| `ft_us_balance` | 美股资产负债表 | 美股数据 | [美股数据/美股资产负债表.md](./美股数据/美股资产负债表.md) |
-| `ft_us_basic` | 美股基础信息 | 美股数据 | [美股数据/美股基础信息.md](./美股数据/美股基础信息.md) |
-| `ft_us_cashflow` | 美股现金流 | 美股数据 | [美股数据/美股现金流.md](./美股数据/美股现金流.md) |
-| `ft_us_income` | 美股利润表 | 美股数据 | [美股数据/美股利润表.md](./美股数据/美股利润表.md) |
-| `ft_abnormal_trading_details` | 龙虎榜明细 | 股票数据 | [股票数据/龙虎榜明细.md](./股票数据/龙虎榜明细.md) |
-| `ft_abnormal_trading_overview` | 龙虎榜总览 | 股票数据 | [股票数据/龙虎榜总览.md](./股票数据/龙虎榜总览.md) |
-| `ft_auction_results` | 集合竞价结果 | 股票数据 | [股票数据/集合竞价结果.md](./股票数据/集合竞价结果.md) |
-| `ft_balance` | A股资产负债表 | 股票数据 | [股票数据/A股资产负债表.md](./股票数据/A股资产负债表.md) |
-| `ft_cashflow` | A股现金流量表 | 股票数据 | [股票数据/A股现金流量表.md](./股票数据/A股现金流量表.md) |
-| `ft_earnings_reports_paginated` | 业绩快报 | 股票数据 | [股票数据/业绩快报.md](./股票数据/业绩快报.md) |
-| `ft_eastmoney_board_constituents` | 东方财富板块成份股 | 股票数据 | [股票数据/东方财富板块成份股.md](./股票数据/东方财富板块成份股.md) |
-| `ft_eastmoney_board_daily_kline` | 东方财富板块日线OHLC | 股票数据 | [股票数据/东方财富板块日线OHLC.md](./股票数据/东方财富板块日线OHLC.md) |
-| `ft_eastmoney_board_latest_kline` | 东方财富板块最新OHLC | 股票数据 | [股票数据/东方财富板块最新OHLC.md](./股票数据/东方财富板块最新OHLC.md) |
-| `ft_eastmoney_concept_boards` | 东方财富概念板块 | 股票数据 | [股票数据/东方财富概念板块.md](./股票数据/东方财富概念板块.md) |
-| `ft_eastmoney_rank` | 东方财富股票排名 | 股票数据 | [股票数据/东方财富股票排名.md](./股票数据/东方财富股票排名.md) |
-| `ft_get_bse_mapping` | 北交所映射 | 股票数据 | [股票数据/北交所映射.md](./股票数据/北交所映射.md) |
-| `ft_get_cashflow_stock_code` | 现金流支持股票代码 | 股票数据 | [股票数据/现金流支持股票代码.md](./股票数据/现金流支持股票代码.md) |
-| `ft_get_eastmoney_dapan_flow` | 东方财富大盘资金流 | 股票数据 | [股票数据/东方财富大盘资金流.md](./股票数据/东方财富大盘资金流.md) |
-| `ft_get_eastmoney_market_valuation` | 东方财富市场估值 | 股票数据 | [股票数据/东方财富市场估值.md](./股票数据/东方财富市场估值.md) |
-| `ft_get_eastmoney_sector_flow` | 东方财富板块资金流 | 股票数据 | [股票数据/东方财富板块资金流.md](./股票数据/东方财富板块资金流.md) |
-| `ft_get_eastmoney_stock_flow` | 东方财富个股资金流 | 股票数据 | [股票数据/东方财富个股资金流.md](./股票数据/东方财富个股资金流.md) |
-| `ft_get_eastmoney_stock_valuation` | 东方财富个股估值 | 股票数据 | [股票数据/东方财富个股估值.md](./股票数据/东方财富个股估值.md) |
-| `ft_get_nth_trade_date` | 第N个交易日 | 股票数据 | [股票数据/第N个交易日.md](./股票数据/第N个交易日.md) |
-| `ft_get_price_change` | 价格变动 | 股票数据 | [股票数据/价格变动.md](./股票数据/价格变动.md) |
-| `ft_get_stk_ah_comparison` | AH股对比 | 股票数据 | [股票数据/AH股对比.md](./股票数据/AH股对比.md) |
-| `ft_get_stock_institution_holdings` | 机构持股 | 股票数据 | [股票数据/机构持股.md](./股票数据/机构持股.md) |
-| `ft_get_stock_institution_holdings_detail` | 机构持股明细 | 股票数据 | [股票数据/机构持股明细.md](./股票数据/机构持股明细.md) |
-| `ft_get_stock_institution_share_holdings` | 机构股本持股 | 股票数据 | [股票数据/机构股本持股.md](./股票数据/机构股本持股.md) |
-| `ft_get_stock_list` | 股票列表 | 股票数据 | [股票数据/股票列表.md](./股票数据/股票列表.md) |
-| `ft_get_stock_share_handler` | 股本 | 股票数据 | [股票数据/股本.md](./股票数据/股本.md) |
-| `ft_goodwill_industry` | 商誉行业 | 股票数据 | [股票数据/商誉行业.md](./股票数据/商誉行业.md) |
-| `ft_goodwill_market_overview` | 商誉市场总览 | 股票数据 | [股票数据/商誉市场总览.md](./股票数据/商誉市场总览.md) |
-| `ft_goodwill_predict` | 商誉预测 | 股票数据 | [股票数据/商誉预测.md](./股票数据/商誉预测.md) |
-| `ft_goodwill_stock_detail` | 商誉个股明细 | 股票数据 | [股票数据/商誉个股明细.md](./股票数据/商誉个股明细.md) |
-| `ft_goodwill_stock_impairment` | 商誉减值 | 股票数据 | [股票数据/商誉减值.md](./股票数据/商誉减值.md) |
-| `ft_hk_sh_stock_connect_members` | 沪港通成份 | 股票数据 | [股票数据/沪港通成份.md](./股票数据/沪港通成份.md) |
-| `ft_hk_sz_stock_connect_members` | 深港通成份 | 股票数据 | [股票数据/深港通成份.md](./股票数据/深港通成份.md) |
-| `ft_income` | A股利润表 | 股票数据 | [股票数据/A股利润表.md](./股票数据/A股利润表.md) |
-| `ft_limit_down_pool` | 跌停池 | 股票数据 | [股票数据/跌停池.md](./股票数据/跌停池.md) |
-| `ft_limit_event_timeline_3s` | 涨跌停事件时间线 | 股票数据 | [股票数据/涨跌停事件时间线.md](./股票数据/涨跌停事件时间线.md) |
-| `ft_limit_up_break_pool` | 炸板池 | 股票数据 | [股票数据/炸板池.md](./股票数据/炸板池.md) |
-| `ft_limit_up_pool` | 涨停池 | 股票数据 | [股票数据/涨停池.md](./股票数据/涨停池.md) |
-| `ft_limit_up_pool_yesterday` | 昨日涨停池 | 股票数据 | [股票数据/昨日涨停池.md](./股票数据/昨日涨停池.md) |
-| `ft_margin_trading_details` | 融资融券明细 | 股票数据 | [股票数据/融资融券明细.md](./股票数据/融资融券明细.md) |
-| `ft_margin_trading_details_paginated` | 融资融券明细分页 | 股票数据 | [股票数据/融资融券明细分页.md](./股票数据/融资融券明细分页.md) |
-| `ft_northbound` | 北向资金交易 | 股票数据 | [股票数据/北向资金交易.md](./股票数据/北向资金交易.md) |
-| `ft_performance_forecasts_paginated` | 业绩预告 | 股票数据 | [股票数据/业绩预告.md](./股票数据/业绩预告.md) |
-| `ft_risk_warning_stock_quotes` | 风险警示股行情 | 股票数据 | [股票数据/风险警示股行情.md](./股票数据/风险警示股行情.md) |
-| `ft_risk_warning_stocks` | 风险警示股 | 股票数据 | [股票数据/风险警示股.md](./股票数据/风险警示股.md) |
-| `ft_sh_hk_stock_connect_members` | 沪股通成份 | 股票数据 | [股票数据/沪股通成份.md](./股票数据/沪股通成份.md) |
-| `ft_southbound` | 南向资金交易 | 股票数据 | [股票数据/南向资金交易.md](./股票数据/南向资金交易.md) |
-| `ft_stk_limit` | 涨跌停价 | 股票数据 | [股票数据/涨跌停价.md](./股票数据/涨跌停价.md) |
-| `ft_stk_premarket` | 盘前数据 | 股票数据 | [股票数据/盘前数据.md](./股票数据/盘前数据.md) |
-| `ft_stock_adjust_factor` | 股票复权因子 | 股票数据 | [股票数据/股票复权因子.md](./股票数据/股票复权因子.md) |
-| `ft_stock_candlesticks` | 股票K线 | 股票数据 | [股票数据/股票K线.md](./股票数据/股票K线.md) |
-| `ft_stock_candlesticks_batch` | 批量股票K线 | 股票数据 | [股票数据/批量股票K线.md](./股票数据/批量股票K线.md) |
-| `ft_stock_capital_flows_paginated` | 股票资金流向 | 股票数据 | [股票数据/股票资金流向.md](./股票数据/股票资金流向.md) |
-| `ft_stock_comment_desire_em` | 千股千评意愿度 | 股票数据 | [股票数据/千股千评意愿度.md](./股票数据/千股千评意愿度.md) |
-| `ft_stock_comment_em` | 千股千评 | 股票数据 | [股票数据/千股千评.md](./股票数据/千股千评.md) |
-| `ft_stock_comment_focus_em` | 千股千评关注度 | 股票数据 | [股票数据/千股千评关注度.md](./股票数据/千股千评关注度.md) |
-| `ft_stock_comment_org_participate_em` | 机构参与度 | 股票数据 | [股票数据/机构参与度.md](./股票数据/机构参与度.md) |
-| `ft_stock_comment_score_em` | 千股千评评分 | 股票数据 | [股票数据/千股千评评分.md](./股票数据/千股千评评分.md) |
-| `ft_stock_filter` | 股票筛选 | 股票数据 | [股票数据/股票筛选.md](./股票数据/股票筛选.md) |
-| `ft_stock_float_holders` | 十大流通股东 | 股票数据 | [股票数据/十大流通股东.md](./股票数据/十大流通股东.md) |
-| `ft_stock_ggcg_em_handler` | 东方财富股东增减持 | 股票数据 | [股票数据/东方财富股东增减持.md](./股票数据/东方财富股东增减持.md) |
-| `ft_stock_ggmx_buy_ranking_handler` | 董监高增持排名 | 股票数据 | [股票数据/董监高增持排名.md](./股票数据/董监高增持排名.md) |
-| `ft_stock_ggmx_handler` | 董监高持股变动 | 股票数据 | [股票数据/董监高持股变动.md](./股票数据/董监高持股变动.md) |
-| `ft_stock_ggmx_sell_ranking_handler` | 董监高减持排名 | 股票数据 | [股票数据/董监高减持排名.md](./股票数据/董监高减持排名.md) |
-| `ft_stock_holders` | 十大股东 | 股票数据 | [股票数据/十大股东.md](./股票数据/十大股东.md) |
-| `ft_stock_holders_number` | 股东人数 | 股票数据 | [股票数据/股东人数.md](./股票数据/股东人数.md) |
-| `ft_stock_intraday_auction_volume` | 集合竞价成交量 | 股票数据 | [股票数据/集合竞价成交量.md](./股票数据/集合竞价成交量.md) |
-| `ft_stock_intraday_auction_volume_symbol` | 单标的集合竞价成交量 | 股票数据 | [股票数据/单标的集合竞价成交量.md](./股票数据/单标的集合竞价成交量.md) |
-| `ft_stock_ipos` | 股票IPO | 股票数据 | [股票数据/股票IPO.md](./股票数据/股票IPO.md) |
-| `ft_stock_pledge_detail` | 股权质押明细 | 股票数据 | [股票数据/股权质押明细.md](./股票数据/股权质押明细.md) |
-| `ft_stock_pledge_summary` | 股权质押汇总 | 股票数据 | [股票数据/股权质押汇总.md](./股票数据/股权质押汇总.md) |
-| `ft_stock_share_chg` | 股东增减持 | 股票数据 | [股票数据/股东增减持.md](./股票数据/股东增减持.md) |
-| `ft_stock_unlock_by_date_handler` | 限售解禁按日期 | 股票数据 | [股票数据/限售解禁按日期.md](./股票数据/限售解禁按日期.md) |
-| `ft_stock_unlock_handler` | 限售解禁 | 股票数据 | [股票数据/限售解禁.md](./股票数据/限售解禁.md) |
-| `ft_suspension_list` | 停牌列表 | 股票数据 | [股票数据/停牌列表.md](./股票数据/停牌列表.md) |
-| `ft_sz_hk_stock_connect_members` | 深股通成份 | 股票数据 | [股票数据/深股通成份.md](./股票数据/深股通成份.md) |
-| `ft_ths_all_board_kline` | 同花顺全板块K线 | 股票数据 | [股票数据/同花顺全板块K线.md](./股票数据/同花顺全板块K线.md) |
-| `ft_ths_board_kline` | 同花顺板块K线 | 股票数据 | [股票数据/同花顺板块K线.md](./股票数据/同花顺板块K线.md) |
-| `ft_ths_board_list` | 同花顺板块列表 | 股票数据 | [股票数据/同花顺板块列表.md](./股票数据/同花顺板块列表.md) |
-| `ft_xueqiu_rank` | 雪球股票排名 | 股票数据 | [股票数据/雪球股票排名.md](./股票数据/雪球股票排名.md) |
+| `ft_eastmoney_us_stock_daily_kline` | 东方财富美股日OHLC | 美股数据/行情数据 | [美股数据/行情数据/东方财富美股日OHLC.md](./美股数据/行情数据/东方财富美股日OHLC.md) |
+| `ft_eastmoney_us_stock_latest_kline` | 东方财富美股最新OHLC | 美股数据/行情数据 | [美股数据/行情数据/东方财富美股最新OHLC.md](./美股数据/行情数据/东方财富美股最新OHLC.md) |
+| `ft_eastmoney_us_stock_list` | 东方财富美股列表 | 美股数据/行情数据 | [美股数据/行情数据/东方财富美股列表.md](./美股数据/行情数据/东方财富美股列表.md) |
+| `ft_us_balance` | 美股资产负债表 | 美股数据/财务数据 | [美股数据/财务数据/美股资产负债表.md](./美股数据/财务数据/美股资产负债表.md) |
+| `ft_us_basic` | 美股基础信息 | 美股数据/基础数据 | [美股数据/基础数据/美股基础信息.md](./美股数据/基础数据/美股基础信息.md) |
+| `ft_us_cashflow` | 美股现金流 | 美股数据/财务数据 | [美股数据/财务数据/美股现金流.md](./美股数据/财务数据/美股现金流.md) |
+| `ft_us_income` | 美股利润表 | 美股数据/财务数据 | [美股数据/财务数据/美股利润表.md](./美股数据/财务数据/美股利润表.md) |
+| `ft_abnormal_trading_details` | 龙虎榜明细 | 股票数据/打板专题数据 | [股票数据/打板专题数据/龙虎榜明细.md](./股票数据/打板专题数据/龙虎榜明细.md) |
+| `ft_abnormal_trading_overview` | 龙虎榜总览 | 股票数据/打板专题数据 | [股票数据/打板专题数据/龙虎榜总览.md](./股票数据/打板专题数据/龙虎榜总览.md) |
+| `ft_auction_results` | 集合竞价结果 | 股票数据/特色数据 | [股票数据/特色数据/集合竞价结果.md](./股票数据/特色数据/集合竞价结果.md) |
+| `ft_balance` | A股资产负债表 | 股票数据/财务数据 | [股票数据/财务数据/A股资产负债表.md](./股票数据/财务数据/A股资产负债表.md) |
+| `ft_cashflow` | A股现金流量表 | 股票数据/财务数据 | [股票数据/财务数据/A股现金流量表.md](./股票数据/财务数据/A股现金流量表.md) |
+| `ft_earnings_reports_paginated` | 业绩快报 | 股票数据/财务数据 | [股票数据/财务数据/业绩快报.md](./股票数据/财务数据/业绩快报.md) |
+| `ft_eastmoney_board_constituents` | 东方财富板块成份股 | 股票数据/打板专题数据 | [股票数据/打板专题数据/东方财富板块成份股.md](./股票数据/打板专题数据/东方财富板块成份股.md) |
+| `ft_eastmoney_board_daily_kline` | 东方财富板块日线OHLC | 股票数据/打板专题数据 | [股票数据/打板专题数据/东方财富板块日线OHLC.md](./股票数据/打板专题数据/东方财富板块日线OHLC.md) |
+| `ft_eastmoney_board_latest_kline` | 东方财富板块最新OHLC | 股票数据/打板专题数据 | [股票数据/打板专题数据/东方财富板块最新OHLC.md](./股票数据/打板专题数据/东方财富板块最新OHLC.md) |
+| `ft_eastmoney_concept_boards` | 东方财富概念板块 | 股票数据/打板专题数据 | [股票数据/打板专题数据/东方财富概念板块.md](./股票数据/打板专题数据/东方财富概念板块.md) |
+| `ft_eastmoney_rank` | 东方财富股票排名 | 股票数据/行情数据 | [股票数据/行情数据/东方财富股票排名.md](./股票数据/行情数据/东方财富股票排名.md) |
+| `ft_get_bse_mapping` | 北交所映射 | 股票数据/基础数据 | [股票数据/基础数据/北交所映射.md](./股票数据/基础数据/北交所映射.md) |
+| `ft_get_cashflow_stock_code` | 现金流支持股票代码 | 股票数据/财务数据 | [股票数据/财务数据/现金流支持股票代码.md](./股票数据/财务数据/现金流支持股票代码.md) |
+| `ft_get_eastmoney_dapan_flow` | 东方财富大盘资金流 | 股票数据/资金流向数据 | [股票数据/资金流向数据/东方财富大盘资金流.md](./股票数据/资金流向数据/东方财富大盘资金流.md) |
+| `ft_get_eastmoney_market_valuation` | 东方财富市场估值 | 股票数据/行情数据 | [股票数据/行情数据/东方财富市场估值.md](./股票数据/行情数据/东方财富市场估值.md) |
+| `ft_get_eastmoney_sector_flow` | 东方财富板块资金流 | 股票数据/资金流向数据 | [股票数据/资金流向数据/东方财富板块资金流.md](./股票数据/资金流向数据/东方财富板块资金流.md) |
+| `ft_get_eastmoney_stock_flow` | 东方财富个股资金流 | 股票数据/资金流向数据 | [股票数据/资金流向数据/东方财富个股资金流.md](./股票数据/资金流向数据/东方财富个股资金流.md) |
+| `ft_get_eastmoney_stock_valuation` | 东方财富个股估值 | 股票数据/基础数据 | [股票数据/基础数据/东方财富个股估值.md](./股票数据/基础数据/东方财富个股估值.md) |
+| `ft_get_nth_trade_date` | 第N个交易日 | 股票数据/基础数据 | [股票数据/基础数据/第N个交易日.md](./股票数据/基础数据/第N个交易日.md) |
+| `ft_get_price_change` | 价格变动 | 股票数据/行情数据 | [股票数据/行情数据/价格变动.md](./股票数据/行情数据/价格变动.md) |
+| `ft_get_stk_ah_comparison` | AH股对比 | 股票数据/特色数据 | [股票数据/特色数据/AH股对比.md](./股票数据/特色数据/AH股对比.md) |
+| `ft_get_stock_institution_holdings` | 机构持股 | 股票数据/基础数据 | [股票数据/基础数据/机构持股.md](./股票数据/基础数据/机构持股.md) |
+| `ft_get_stock_institution_holdings_detail` | 机构持股明细 | 股票数据/基础数据 | [股票数据/基础数据/机构持股明细.md](./股票数据/基础数据/机构持股明细.md) |
+| `ft_get_stock_institution_share_holdings` | 机构股本持股 | 股票数据/基础数据 | [股票数据/基础数据/机构股本持股.md](./股票数据/基础数据/机构股本持股.md) |
+| `ft_get_stock_list` | 股票列表 | 股票数据/基础数据 | [股票数据/基础数据/股票列表.md](./股票数据/基础数据/股票列表.md) |
+| `ft_get_stock_share_handler` | 股本 | 股票数据/基础数据 | [股票数据/基础数据/股本.md](./股票数据/基础数据/股本.md) |
+| `ft_goodwill_industry` | 商誉行业 | 股票数据/财务数据 | [股票数据/财务数据/商誉行业.md](./股票数据/财务数据/商誉行业.md) |
+| `ft_goodwill_market_overview` | 商誉市场总览 | 股票数据/财务数据 | [股票数据/财务数据/商誉市场总览.md](./股票数据/财务数据/商誉市场总览.md) |
+| `ft_goodwill_predict` | 商誉预测 | 股票数据/财务数据 | [股票数据/财务数据/商誉预测.md](./股票数据/财务数据/商誉预测.md) |
+| `ft_goodwill_stock_detail` | 商誉个股明细 | 股票数据/财务数据 | [股票数据/财务数据/商誉个股明细.md](./股票数据/财务数据/商誉个股明细.md) |
+| `ft_goodwill_stock_impairment` | 商誉减值 | 股票数据/财务数据 | [股票数据/财务数据/商誉减值.md](./股票数据/财务数据/商誉减值.md) |
+| `ft_hk_sh_stock_connect_members` | 沪港通成份 | 股票数据/基础数据 | [股票数据/基础数据/沪港通成份.md](./股票数据/基础数据/沪港通成份.md) |
+| `ft_hk_sz_stock_connect_members` | 深港通成份 | 股票数据/基础数据 | [股票数据/基础数据/深港通成份.md](./股票数据/基础数据/深港通成份.md) |
+| `ft_income` | A股利润表 | 股票数据/财务数据 | [股票数据/财务数据/A股利润表.md](./股票数据/财务数据/A股利润表.md) |
+| `ft_limit_down_pool` | 跌停池 | 股票数据/打板专题数据 | [股票数据/打板专题数据/跌停池.md](./股票数据/打板专题数据/跌停池.md) |
+| `ft_limit_event_timeline_3s` | 涨跌停事件时间线 | 股票数据/打板专题数据 | [股票数据/打板专题数据/涨跌停事件时间线.md](./股票数据/打板专题数据/涨跌停事件时间线.md) |
+| `ft_limit_up_break_pool` | 炸板池 | 股票数据/打板专题数据 | [股票数据/打板专题数据/炸板池.md](./股票数据/打板专题数据/炸板池.md) |
+| `ft_limit_up_pool` | 涨停池 | 股票数据/打板专题数据 | [股票数据/打板专题数据/涨停池.md](./股票数据/打板专题数据/涨停池.md) |
+| `ft_limit_up_pool_yesterday` | 昨日涨停池 | 股票数据/打板专题数据 | [股票数据/打板专题数据/昨日涨停池.md](./股票数据/打板专题数据/昨日涨停池.md) |
+| `ft_margin_trading_details` | 融资融券明细 | 股票数据/两融及转融通 | [股票数据/两融及转融通/融资融券明细.md](./股票数据/两融及转融通/融资融券明细.md) |
+| `ft_northbound` | 北向资金交易 | 股票数据/资金流向数据 | [股票数据/资金流向数据/北向资金交易.md](./股票数据/资金流向数据/北向资金交易.md) |
+| `ft_performance_forecasts_paginated` | 业绩预告 | 股票数据/财务数据 | [股票数据/财务数据/业绩预告.md](./股票数据/财务数据/业绩预告.md) |
+| `ft_risk_warning_stock_quotes` | 风险警示股行情 | 股票数据/参考数据 | [股票数据/参考数据/风险警示股行情.md](./股票数据/参考数据/风险警示股行情.md) |
+| `ft_risk_warning_stocks` | 风险警示股 | 股票数据/参考数据 | [股票数据/参考数据/风险警示股.md](./股票数据/参考数据/风险警示股.md) |
+| `ft_sh_hk_stock_connect_members` | 沪股通成份 | 股票数据/基础数据 | [股票数据/基础数据/沪股通成份.md](./股票数据/基础数据/沪股通成份.md) |
+| `ft_southbound` | 南向资金交易 | 股票数据/资金流向数据 | [股票数据/资金流向数据/南向资金交易.md](./股票数据/资金流向数据/南向资金交易.md) |
+| `ft_stk_limit` | 涨跌停价 | 股票数据/行情数据 | [股票数据/行情数据/涨跌停价.md](./股票数据/行情数据/涨跌停价.md) |
+| `ft_stk_premarket` | 盘前数据 | 股票数据/特色数据 | [股票数据/特色数据/盘前数据.md](./股票数据/特色数据/盘前数据.md) |
+| `ft_stock_adjust_factor` | 股票复权因子 | 股票数据/行情数据 | [股票数据/行情数据/股票复权因子.md](./股票数据/行情数据/股票复权因子.md) |
+| `ft_stock_candlesticks` | 股票K线 | 股票数据/行情数据 | [股票数据/行情数据/股票K线.md](./股票数据/行情数据/股票K线.md) |
+| `ft_stock_candlesticks_batch` | 批量股票K线 | 股票数据/行情数据 | [股票数据/行情数据/批量股票K线.md](./股票数据/行情数据/批量股票K线.md) |
+| `ft_stock_capital_flows_paginated` | 股票资金流向 | 股票数据/资金流向数据 | [股票数据/资金流向数据/股票资金流向.md](./股票数据/资金流向数据/股票资金流向.md) |
+| `ft_stock_comment_desire_em` | 千股千评意愿度 | 股票数据/特色数据 | [股票数据/特色数据/千股千评意愿度.md](./股票数据/特色数据/千股千评意愿度.md) |
+| `ft_stock_comment_em` | 千股千评 | 股票数据/特色数据 | [股票数据/特色数据/千股千评.md](./股票数据/特色数据/千股千评.md) |
+| `ft_stock_comment_focus_em` | 千股千评关注度 | 股票数据/特色数据 | [股票数据/特色数据/千股千评关注度.md](./股票数据/特色数据/千股千评关注度.md) |
+| `ft_stock_comment_org_participate_em` | 机构参与度 | 股票数据/特色数据 | [股票数据/特色数据/机构参与度.md](./股票数据/特色数据/机构参与度.md) |
+| `ft_stock_comment_score_em` | 千股千评评分 | 股票数据/特色数据 | [股票数据/特色数据/千股千评评分.md](./股票数据/特色数据/千股千评评分.md) |
+| `ft_stock_filter` | 股票筛选 | 股票数据/行情数据 | [股票数据/行情数据/股票筛选.md](./股票数据/行情数据/股票筛选.md) |
+| `ft_stock_float_holders` | 十大流通股东 | 股票数据/参考数据 | [股票数据/参考数据/十大流通股东.md](./股票数据/参考数据/十大流通股东.md) |
+| `ft_stock_ggcg_em_handler` | 东方财富股东增减持 | 股票数据/参考数据 | [股票数据/参考数据/东方财富股东增减持.md](./股票数据/参考数据/东方财富股东增减持.md) |
+| `ft_stock_ggmx_buy_ranking_handler` | 董监高增持排名 | 股票数据/参考数据 | [股票数据/参考数据/董监高增持排名.md](./股票数据/参考数据/董监高增持排名.md) |
+| `ft_stock_ggmx_handler` | 董监高持股变动 | 股票数据/参考数据 | [股票数据/参考数据/董监高持股变动.md](./股票数据/参考数据/董监高持股变动.md) |
+| `ft_stock_ggmx_sell_ranking_handler` | 董监高减持排名 | 股票数据/参考数据 | [股票数据/参考数据/董监高减持排名.md](./股票数据/参考数据/董监高减持排名.md) |
+| `ft_stock_holders` | 十大股东 | 股票数据/参考数据 | [股票数据/参考数据/十大股东.md](./股票数据/参考数据/十大股东.md) |
+| `ft_stock_holders_number` | 股东人数 | 股票数据/参考数据 | [股票数据/参考数据/股东人数.md](./股票数据/参考数据/股东人数.md) |
+| `ft_stock_intraday_auction_volume` | 连续竞价成交量 | 股票数据/特色数据 | [股票数据/特色数据/连续竞价成交量.md](./股票数据/特色数据/连续竞价成交量.md) |
+| `ft_stock_intraday_auction_volume_symbol` | 单标的连续竞价成交量 | 股票数据/特色数据 | [股票数据/特色数据/单标的连续竞价成交量.md](./股票数据/特色数据/单标的连续竞价成交量.md) |
+| `ft_stock_ipos` | 股票IPO | 股票数据/基础数据 | [股票数据/基础数据/股票IPO.md](./股票数据/基础数据/股票IPO.md) |
+| `ft_stock_pledge_detail` | 股权质押明细 | 股票数据/参考数据 | [股票数据/参考数据/股权质押明细.md](./股票数据/参考数据/股权质押明细.md) |
+| `ft_stock_pledge_summary` | 股权质押汇总 | 股票数据/参考数据 | [股票数据/参考数据/股权质押汇总.md](./股票数据/参考数据/股权质押汇总.md) |
+| `ft_stock_rating_top5` | 非凸股票评级Top5 | 股票数据/特色数据 | [股票数据/特色数据/非凸股票评级Top5.md](./股票数据/特色数据/非凸股票评级Top5.md) |
+| `ft_stock_share_chg` | 股东增减持 | 股票数据/参考数据 | [股票数据/参考数据/股东增减持.md](./股票数据/参考数据/股东增减持.md) |
+| `ft_stock_unlock_by_date_handler` | 限售解禁按日期 | 股票数据/参考数据 | [股票数据/参考数据/限售解禁按日期.md](./股票数据/参考数据/限售解禁按日期.md) |
+| `ft_stock_unlock_handler` | 限售解禁 | 股票数据/参考数据 | [股票数据/参考数据/限售解禁.md](./股票数据/参考数据/限售解禁.md) |
+| `ft_suspension_list` | 停牌列表 | 股票数据/基础数据 | [股票数据/基础数据/停牌列表.md](./股票数据/基础数据/停牌列表.md) |
+| `ft_sz_hk_stock_connect_members` | 深股通成份 | 股票数据/基础数据 | [股票数据/基础数据/深股通成份.md](./股票数据/基础数据/深股通成份.md) |
+| `ft_ths_all_board_kline` | 同花顺全板块K线 | 股票数据/打板专题数据 | [股票数据/打板专题数据/同花顺全板块K线.md](./股票数据/打板专题数据/同花顺全板块K线.md) |
+| `ft_ths_board_kline` | 同花顺板块K线 | 股票数据/打板专题数据 | [股票数据/打板专题数据/同花顺板块K线.md](./股票数据/打板专题数据/同花顺板块K线.md) |
+| `ft_ths_board_list` | 同花顺板块列表 | 股票数据/打板专题数据 | [股票数据/打板专题数据/同花顺板块列表.md](./股票数据/打板专题数据/同花顺板块列表.md) |
+| `ft_xueqiu_rank` | 雪球股票排名 | 股票数据/特色数据 | [股票数据/特色数据/雪球股票排名.md](./股票数据/特色数据/雪球股票排名.md) |
+| `ft_block_trades` | 大宗交易 | 股票数据/参考数据 | [股票数据/参考数据/大宗交易.md](./股票数据/参考数据/大宗交易.md) |
+| `ft_convertible_bond_candlesticks` | 可转债K线 | 债券专题 | [债券专题/可转债K线.md](./债券专题/可转债K线.md) |
+| `ft_convertible_bond_candlesticks_batch` | 批量可转债K线 | 债券专题 | [债券专题/批量可转债K线.md](./债券专题/批量可转债K线.md) |
+| `ft_etf_candlesticks` | ETFK线 | ETF专题 | [ETF专题/ETFK线.md](./ETF专题/ETFK线.md) |
+| `ft_etf_candlesticks_batch` | 批量ETFK线 | ETF专题 | [ETF专题/批量ETFK线.md](./ETF专题/批量ETFK线.md) |
+| `ft_get_company_list` | 公司列表 | 股票数据/基础数据 | [股票数据/基础数据/公司列表.md](./股票数据/基础数据/公司列表.md) |
+| `ft_get_namechange` | 股票曾用名 | 股票数据/基础数据 | [股票数据/基础数据/股票曾用名.md](./股票数据/基础数据/股票曾用名.md) |
+| `ft_get_stk_code_change` | A股代码变更 | 股票数据/基础数据 | [股票数据/基础数据/A股代码变更.md](./股票数据/基础数据/A股代码变更.md) |
+| `ft_get_stk_manager_hold` | 上市公司管理层持股 | 股票数据/参考数据 | [股票数据/参考数据/上市公司管理层持股.md](./股票数据/参考数据/上市公司管理层持股.md) |
+| `ft_get_stk_manager_pay` | 上市公司管理层薪酬 | 股票数据/参考数据 | [股票数据/参考数据/上市公司管理层薪酬.md](./股票数据/参考数据/上市公司管理层薪酬.md) |
+| `ft_get_stk_managers` | 上市公司管理层 | 股票数据/基础数据 | [股票数据/基础数据/上市公司管理层.md](./股票数据/基础数据/上市公司管理层.md) |
+| `ft_get_stk_status_change` | A股状态变更 | 股票数据/基础数据 | [股票数据/基础数据/A股状态变更.md](./股票数据/基础数据/A股状态变更.md) |
+| `ft_get_yzxdr_detail` | 一致行动人明细 | 股票数据/基础数据 | [股票数据/基础数据/一致行动人明细.md](./股票数据/基础数据/一致行动人明细.md) |
+| `ft_hk_balance_bank` | 港股资产负债表（银行业） | 港股数据/财务数据 | [港股数据/财务数据/港股资产负债表（银行业）.md](./港股数据/财务数据/港股资产负债表（银行业）.md) |
+| `ft_hk_balance_gene` | 港股资产负债表（一般企业） | 港股数据/财务数据 | [港股数据/财务数据/港股资产负债表（一般企业）.md](./港股数据/财务数据/港股资产负债表（一般企业）.md) |
+| `ft_hk_balance_insur` | 港股资产负债表（保险业） | 港股数据/财务数据 | [港股数据/财务数据/港股资产负债表（保险业）.md](./港股数据/财务数据/港股资产负债表（保险业）.md) |
+| `ft_hk_income_bank` | 港股利润表（银行业） | 港股数据/财务数据 | [港股数据/财务数据/港股利润表（银行业）.md](./港股数据/财务数据/港股利润表（银行业）.md) |
+| `ft_hk_income_gene` | 港股利润表（一般企业） | 港股数据/财务数据 | [港股数据/财务数据/港股利润表（一般企业）.md](./港股数据/财务数据/港股利润表（一般企业）.md) |
+| `ft_hk_income_insur` | 港股利润表（保险业） | 港股数据/财务数据 | [港股数据/财务数据/港股利润表（保险业）.md](./港股数据/财务数据/港股利润表（保险业）.md) |
+| `ft_index_candlesticks` | 指数K线 | 指数专题/指数行情 | [指数专题/指数行情/指数K线.md](./指数专题/指数行情/指数K线.md) |
+| `ft_index_candlesticks_batch` | 批量指数K线 | 指数专题/指数行情 | [指数专题/指数行情/批量指数K线.md](./指数专题/指数行情/批量指数K线.md) |
+| `ft_stock_signal_latest_snapshot` | 信号最新快照 | 股票数据/特色数据 | [股票数据/特色数据/信号最新快照.md](./股票数据/特色数据/信号最新快照.md) |
+| `ft_daec_prices` | DAEC分时价格 | 股票数据/行情数据 | [股票数据/行情数据/标的分时数据.md](./股票数据/行情数据/标的分时数据.md) |
+| `ft_daec_prev_closes` | DAEC标的昨收价 | 股票数据/行情数据 | [股票数据/行情数据/标的昨收价.md](./股票数据/行情数据/标的昨收价.md) |
+| `ft_daec_stocks_all` | DAEC全市场A股行情 | 股票数据/行情数据 | [股票数据/行情数据/A股行情列表.md](./股票数据/行情数据/A股行情列表.md) |
+| `ft_daec_stocks_xshg` | DAEC上证A股行情 | 股票数据/行情数据 | [股票数据/行情数据/A股行情列表.md](./股票数据/行情数据/A股行情列表.md) |
+| `ft_daec_stocks_xshe` | DAEC深证A股行情 | 股票数据/行情数据 | [股票数据/行情数据/A股行情列表.md](./股票数据/行情数据/A股行情列表.md) |
+| `ft_daec_stocks_bjse` | DAEC北证A股行情 | 股票数据/行情数据 | [股票数据/行情数据/A股行情列表.md](./股票数据/行情数据/A股行情列表.md) |
+| `ft_daec_market_snapshot` | DAEC市场行情快照 | 股票数据/行情数据 | [股票数据/行情数据/市场行情快照.md](./股票数据/行情数据/市场行情快照.md) |
+| `ft_daec_distribution_history` | DAEC日内涨跌停分布历史 | 股票数据/打板专题数据 | [股票数据/打板专题数据/日内涨跌停分布历史.md](./股票数据/打板专题数据/日内涨跌停分布历史.md) |
 
 ## License
 

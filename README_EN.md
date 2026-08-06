@@ -10,7 +10,7 @@ For international developers, this repository can be understood as **FTShare MCP
 
 > This repository focuses on **MCP tool documentation and integration instructions**. It does not contain the MCP Server source code. The public MCP service is provided by the FTShare data service.
 
-The current public documentation exposes **171 tools**: 164 `ft_*` financial data tools and 7 convenience query tools. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. The live `tools/list` response is the source of truth.
+The current public documentation exposes **199 tools**: 194 `ft_*` financial data tools and 5 convenience query tools. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. The live `tools/list` response is the source of truth.
 
 ## Public MCP Endpoint
 
@@ -47,7 +47,7 @@ When copying examples from tool documents, replace `<MCP_BASE_URL>` with the URL
 4. Initialize a session by calling MCP `initialize` and reading `Mcp-Session-Id`.
 5. Complete initialization by sending `notifications/initialized`; a successful HTTP response is 202 with an empty body.
 6. Call `tools/call` with `Mcp-Session-Id` and the negotiated `MCP-Protocol-Version`, where `name` is the tool name and `arguments` is the business parameter object.
-7. Read `result.structuredContent` first. `result.content[0].text` is the serialized JSON form of the same value for clients that do not yet consume structured results.
+7. For a raw JSON-RPC response, read `result.structuredContent` first. `result.content[0].text` is the serialized JSON form of the same value. In the MCP Python SDK, the corresponding attribute is `result.structured_content`.
 8. Unknown tools and malformed request shapes are JSON-RPC protocol errors. Input validation, upstream API failures, and business execution failures are returned in `result` with `isError: true`.
 
 ## Unified Output Format
@@ -119,56 +119,75 @@ The following examples can call any documented tool. Change only `TOOL_NAME` and
 ### curl
 
 ```bash
+set -euo pipefail
+
 MCP_BASE_URL="https://market.ft.tech/gateway/mcp"
 TOOL_NAME="ft_get_cb_lists_handler"
 TOOL_ARGS='{}'
 
+check_mcp_response() {
+  local response=$1
+  printf '%s\n' "$response"
+  if printf '%s\n' "$response" | grep -Eq '"isError"[[:space:]]*:[[:space:]]*true|"error"[[:space:]]*:[[:space:]]*\{'; then
+    return 1
+  fi
+}
+
 INIT_PAYLOAD='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"curl-demo","version":"1.0.0"}}}'
 CALL_PAYLOAD="{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"${TOOL_NAME}\",\"arguments\":${TOOL_ARGS}}}"
 
-MCP_SESSION_ID=$(curl -sS -m 10 -D - -o /dev/null -X POST "$MCP_BASE_URL" \
+MCP_SESSION_ID=$(curl -fsS -m 60 -D - -o /dev/null -X POST "$MCP_BASE_URL" \
   -H "Accept: application/json, text/event-stream" \
   -H "Content-Type: application/json" \
   -d "$INIT_PAYLOAD" \
   | awk 'tolower($1)=="mcp-session-id:" {print $2}' \
   | tr -d '\r')
 
-curl -fsS -m 10 -o /dev/null -X POST "$MCP_BASE_URL" \
+if [ -z "$MCP_SESSION_ID" ]; then
+  printf '%s\n' 'initialize did not return Mcp-Session-Id' >&2
+  exit 1
+fi
+
+curl -fsS -m 60 -o /dev/null -X POST "$MCP_BASE_URL" \
   -H "Accept: application/json, text/event-stream" \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $MCP_SESSION_ID" \
   -H "MCP-Protocol-Version: 2025-11-25" \
   -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
 
-curl -sS -m 30 -X POST "$MCP_BASE_URL" \
+CALL_RESPONSE=$(curl -fsS -m 60 -X POST "$MCP_BASE_URL" \
   -H "Accept: application/json, text/event-stream" \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $MCP_SESSION_ID" \
   -H "MCP-Protocol-Version: 2025-11-25" \
-  -d "$CALL_PAYLOAD"
+  -d "$CALL_PAYLOAD")
+
+check_mcp_response "$CALL_RESPONSE"
 ```
 
 ### Python
 
-Install dependency: `pip install mcp`
+The examples use the official MCP Python SDK 2.x API. Install the verified version: `pip install "mcp==2.0.0"`
 
 ```python
 import asyncio
 from mcp import ClientSession
-from mcp.client.streamable_http import streamablehttp_client
+from mcp.client.streamable_http import streamable_http_client
 
 MCP_BASE_URL = "https://market.ft.tech/gateway/mcp"
 TOOL_NAME = "ft_get_cb_lists_handler"
 TOOL_ARGS = {}
 
 async def main():
-    async with streamablehttp_client(MCP_BASE_URL) as (read_stream, write_stream, _):
+    async with streamable_http_client(MCP_BASE_URL) as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             tools = await session.list_tools()
             print([tool.name for tool in tools.tools])
             result = await session.call_tool(TOOL_NAME, TOOL_ARGS)
-            print(result.structuredContent)
+            if result.is_error:
+                raise RuntimeError(result.content[0].text)
+            print(result.structured_content)
             print(result.content[0].text)  # Compatible JSON text identical to structuredContent.
 
 asyncio.run(main())
@@ -178,30 +197,28 @@ asyncio.run(main())
 
 | Category | Tool Count | Documentation |
 |----------|------------|---------------|
-| ETF | 8 | [ETF专题/](./ETF专题/) |
-| Bonds | 2 | [债券专题/](./债券专题/) |
+| ETF | 10 | [ETF专题/](./ETF专题/) |
+| Bonds | 4 | [债券专题/](./债券专题/) |
 | Public Funds | 20 | [公募基金/](./公募基金/) |
 | FX Data | 1 | [外汇数据/](./外汇数据/) |
 | LLM Corpus | 5 | [大模型语料/](./大模型语料/) |
 | Macro Economy | 17 | [宏观经济/](./宏观经济/) |
-| Index Data | 8 | [指数专题/](./指数专题/) |
-| Futures Data | 7 | [期货数据/](./期货数据/) |
-| Hong Kong Stocks | 7 | [港股数据/](./港股数据/) |
+| Index Data | 10 | [指数专题/](./指数专题/) |
+| Futures Data | 4 | [期货数据/](./期货数据/) |
+| Hong Kong Stocks | 13 | [港股数据/](./港股数据/) |
 | Spot Data | 2 | [现货数据/](./现货数据/) |
 | US Stocks | 7 | [美股数据/](./美股数据/) |
-| A-share Stocks | 80 | [股票数据/](./股票数据/) |
+| A-share Stocks | 101 | [股票数据/](./股票数据/) |
 
 ### Convenience query tools
 
 | MCP Tool | Title | Documentation |
 |----------|-------|---------------|
-| `capital_flow` | Capital Flow | Live schema: `tools/list` |
+| `capital_flow` | Capital Flow | [便捷查询入口/资金流.md](./便捷查询入口/资金流.md) |
 | `daily_ohlc` | Daily OHLC | [股票数据/日频OHLC.md](./股票数据/日频OHLC.md) |
 | `intraday_kline` | Intraday Price and Minute K-line | [股票数据/分时与分钟K线.md](./股票数据/分时与分钟K线.md) |
-| `margin` | Margin Trading | Live schema: `tools/list` |
-| `report_announcement_list` | Announcement List | Live schema: `tools/list` |
+| `report_announcement_list` | Announcement List | [便捷查询入口/公告列表.md](./便捷查询入口/公告列表.md) |
 | `report_announcement_summary` | Announcement Summary | [大模型语料/公告摘要.md](./大模型语料/公告摘要.md) |
-| `semantic_search_news` | Semantic News Search | Live schema: `tools/list` |
 
 For the full tool index and individual tool documentation, see the Chinese [README.md](README.md) and the category documents. The tool names, parameter names, and examples are language-independent.
 
