@@ -13,8 +13,8 @@ FTShare MCP 是面向 AI Agent 的金融数据 MCP 服务，让 Claude Code、Co
 - **服务版本**：FTShare MCP Server `0.1.1`
 - **公共地址**：`https://market.ft.tech/gateway/mcp`
 - **传输协议**：MCP Streamable HTTP
-- **工具数量**：202
-- **工具构成**：195 个 `ft_*` 数据工具 + 7 个便捷查询入口
+- **工具数量**：199
+- **工具构成**：194 个 `ft_*` 数据工具 + 5 个便捷查询入口
 - **服务属性**：只读金融数据服务
 - **实时工具定义**：以 MCP `tools/list` 返回结果为准
 
@@ -86,7 +86,7 @@ url = "https://market.ft.tech/gateway/mcp"
 - 直接调用协议时，先发送 `initialize` 获取 `Mcp-Session-Id`。
 - 初始化后发送 `notifications/initialized`，后续请求同时携带 Session ID 和协商后的 `MCP-Protocol-Version`。
 - `tools/list` 返回每个工具的 `title`、`inputSchema`、`outputSchema`、只读 `annotations` 和 `_meta.securitySchemes`。
-- 调用成功时优先读取 `result.structured_content`；`result.content[0].text` 是同值的序列化 JSON。
+- 直接读取 JSON-RPC 响应时，调用成功后优先读取 `result.structuredContent`；`result.content[0].text` 是同值的序列化 JSON。使用 MCP Python SDK 时，对应属性名为 `result.structured_content`。
 - 参数校验、上游服务及业务执行错误位于 `result` 中，并设置 `isError=true`。
 
 各工具文档中的 Python 示例基于官方 MCP Python SDK 2.x API，运行前先执行 `pip install "mcp==2.0.0"`。
@@ -157,7 +157,7 @@ Agent 和应用程序应优先读取 `structuredContent.data`；分页、截断�
 
 ## 0.1.1 更新
 
-- 当前公开工具索引调整为 202
+- 当前公开工具索引调整为 199
 - 移除 `echo`、`aggregate_demo` 两个示例工具
 - 新增 15 个公募基金工具
 - 新增 6 个 ETF/可转债/指数 K 线工具、6 个港股财报工具，以及 10 个股票基础、参考和特色数据工具（含大宗交易、一致行动人等）
@@ -201,21 +201,19 @@ Agent 和应用程序应优先读取 `structuredContent.data`；分页、截断�
 | 港股数据 | 13 | [港股数据/](./港股数据/) |
 | 现货数据 | 2 | [现货数据/](./现货数据/) |
 | 美股数据 | 7 | [美股数据/](./美股数据/) |
-| 股票数据 | 102 | [股票数据/](./股票数据/) |
-| 便捷查询入口 | 7 | 通过 `tools/list` 查看实时 Schema |
-| **合计** | **202** | 195 个数据工具 + 7 个便捷查询入口 |
+| 股票数据 | 101 | [股票数据/](./股票数据/) |
+| 便捷查询入口 | 5 | [便捷查询入口/](./便捷查询入口/)；实时约束仍以 `tools/list` 为准 |
+| **合计** | **199** | 194 个数据工具 + 5 个便捷查询入口 |
 
 ## 工具索引
 
 | MCP 工具 | 标题 | 数据目录 | 文档 |
 |----------|------|----------|------|
-| `capital_flow` | 资金流 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `capital_flow` | 资金流 | 便捷查询入口 | [便捷查询入口/资金流.md](./便捷查询入口/资金流.md) |
 | `daily_ohlc` | 日频 OHLC | 便捷查询入口 | [股票数据/日频OHLC.md](./股票数据/日频OHLC.md) |
 | `intraday_kline` | 分时与分钟 K 线 | 便捷查询入口 | [股票数据/分时与分钟K线.md](./股票数据/分时与分钟K线.md) |
-| `margin` | 融资融券 | 便捷查询入口 | 实时 Schema：`tools/list` |
-| `report_announcement_list` | 公告列表 | 便捷查询入口 | 实时 Schema：`tools/list` |
+| `report_announcement_list` | 公告列表 | 便捷查询入口 | [便捷查询入口/公告列表.md](./便捷查询入口/公告列表.md) |
 | `report_announcement_summary` | 公告摘要 | 便捷查询入口 | [大模型语料/公告摘要.md](./大模型语料/公告摘要.md) |
-| `semantic_search_news` | 新闻语义检索 | 便捷查询入口 | 实时 Schema：`tools/list` |
 | `ft_etf_adjust_factor` | ETF复权因子 | ETF专题 | [ETF专题/ETF复权因子.md](./ETF专题/ETF复权因子.md) |
 | `ft_etf_components_all` | ETF成份列表 | ETF专题 | [ETF专题/ETF成份列表.md](./ETF专题/ETF成份列表.md) |
 | `ft_etf_description_all` | ETF基础信息 | ETF专题 | [ETF专题/ETF基础信息.md](./ETF专题/ETF基础信息.md) |
@@ -340,7 +338,6 @@ Agent 和应用程序应优先读取 `structuredContent.data`；分页、截断�
 | `ft_limit_up_pool` | 涨停池 | 股票数据/打板专题数据 | [股票数据/打板专题数据/涨停池.md](./股票数据/打板专题数据/涨停池.md) |
 | `ft_limit_up_pool_yesterday` | 昨日涨停池 | 股票数据/打板专题数据 | [股票数据/打板专题数据/昨日涨停池.md](./股票数据/打板专题数据/昨日涨停池.md) |
 | `ft_margin_trading_details` | 融资融券明细 | 股票数据/两融及转融通 | [股票数据/两融及转融通/融资融券明细.md](./股票数据/两融及转融通/融资融券明细.md) |
-| `ft_margin_trading_details_paginated` | 融资融券明细分页 | 股票数据/两融及转融通 | [股票数据/两融及转融通/融资融券明细分页.md](./股票数据/两融及转融通/融资融券明细分页.md) |
 | `ft_northbound` | 北向资金交易 | 股票数据/资金流向数据 | [股票数据/资金流向数据/北向资金交易.md](./股票数据/资金流向数据/北向资金交易.md) |
 | `ft_performance_forecasts_paginated` | 业绩预告 | 股票数据/财务数据 | [股票数据/财务数据/业绩预告.md](./股票数据/财务数据/业绩预告.md) |
 | `ft_risk_warning_stock_quotes` | 风险警示股行情 | 股票数据/参考数据 | [股票数据/参考数据/风险警示股行情.md](./股票数据/参考数据/风险警示股行情.md) |

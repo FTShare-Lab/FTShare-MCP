@@ -122,7 +122,7 @@ async def main():
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             result = await session.call_tool(
-                "ft_stock_rating_top5",
+                'ft_stock_rating_top5',
                 {'date': '20260804', 'variant': '300001', 'type': 'all'},
             )
             if result.is_error:

@@ -98,7 +98,7 @@ async def main():
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             result = await session.call_tool(
-                "ft_etf_candlesticks_batch",
+                'ft_etf_candlesticks_batch',
                 {'symbols': ['510300.SH'],
                  'interval_unit': 'day',
                  'until_ts_millis': 1782370800000,

@@ -118,7 +118,7 @@ async def main():
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             result = await session.call_tool(
-                "ft_eastmoney_us_stock_latest_kline",
+                'ft_eastmoney_us_stock_latest_kline',
                 {'stock_code': 'AAPL', 'page': 1, 'page_size': 2},
             )
             if result.is_error:

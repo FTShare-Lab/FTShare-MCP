@@ -86,12 +86,22 @@
 ### 按交易日查询普通分钟 K
 
 ```bash
-curl -sS -m 30 -X POST <MCP_BASE_URL> \
+set -euo pipefail
+
+: "${MCP_SESSION_ID:?请先按 README 完成 initialize 并设置 MCP_SESSION_ID}"
+MCP_BASE_URL="<MCP_BASE_URL>"
+
+CALL_RESPONSE=$(curl -fsS -m 60 -X POST "$MCP_BASE_URL" \
   -H "Accept: application/json, text/event-stream" \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $MCP_SESSION_ID" \
   -H "MCP-Protocol-Version: 2025-11-25" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"intraday_kline","arguments":{"type":"minute_kline","symbol":"600519.SH","date":"20260701"}}}'
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"intraday_kline","arguments":{"type":"minute_kline","symbol":"600519.SH","date":"20260701"}}}')
+
+printf '%s\n' "$CALL_RESPONSE"
+if printf '%s\n' "$CALL_RESPONSE" | grep -Eq '"isError"[[:space:]]*:[[:space:]]*true|"error"[[:space:]]*:[[:space:]]*\{'; then
+  exit 1
+fi
 ```
 
 ### 查询普通分钟 K
@@ -116,7 +126,10 @@ async def main():
                     "limit": 2,
                 },
             )
+            if result.is_error:
+                raise RuntimeError(result.content[0].text)
             print(result.structured_content)
+            print(result.content[0].text)
 
 
 asyncio.run(main())
@@ -127,12 +140,22 @@ asyncio.run(main())
 `futures` 口径的 `symbol` 必须是具体合约代码，连续主力代码无数据：
 
 ```bash
-curl -sS -m 30 -X POST <MCP_BASE_URL> \
+set -euo pipefail
+
+: "${MCP_SESSION_ID:?请先按 README 完成 initialize 并设置 MCP_SESSION_ID}"
+MCP_BASE_URL="<MCP_BASE_URL>"
+
+CALL_RESPONSE=$(curl -fsS -m 60 -X POST "$MCP_BASE_URL" \
   -H "Accept: application/json, text/event-stream" \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $MCP_SESSION_ID" \
   -H "MCP-Protocol-Version: 2025-11-25" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"intraday_kline","arguments":{"type":"futures","symbol":"RB2510","futures_interval":"1min","limit":2}}}'
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"intraday_kline","arguments":{"type":"futures","symbol":"RB2510","futures_interval":"1min","limit":2}}}')
+
+printf '%s\n' "$CALL_RESPONSE"
+if printf '%s\n' "$CALL_RESPONSE" | grep -Eq '"isError"[[:space:]]*:[[:space:]]*true|"error"[[:space:]]*:[[:space:]]*\{'; then
+  exit 1
+fi
 ```
 
 超过对应时间范围、缺少当前 `type` 的必填字段或传入未知字段时，工具调用会返回上述错误结果。

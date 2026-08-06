@@ -96,7 +96,7 @@ async def main():
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             result = await session.call_tool(
-                "ft_convertible_bond_candlesticks_batch",
+                'ft_convertible_bond_candlesticks_batch',
                 {'symbols': ['113027.SH'],
                  'interval_unit': 'day',
                  'until_ts_millis': 1782370800000,

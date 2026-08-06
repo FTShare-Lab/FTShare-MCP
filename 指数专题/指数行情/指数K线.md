@@ -95,7 +95,7 @@ async def main():
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             result = await session.call_tool(
-                "ft_index_candlesticks",
+                'ft_index_candlesticks',
                 {'symbol': '000300.SH',
                  'interval_unit': 'day',
                  'until_ts_millis': 1782370800000,

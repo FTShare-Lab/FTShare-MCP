@@ -88,7 +88,7 @@ async def main():
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             result = await session.call_tool(
-                "ft_get_stk_status_change",
+                'ft_get_stk_status_change',
                 {'trade_code': '600848.SH'},
             )
             if result.is_error:
