@@ -3,12 +3,11 @@
 > **MCP 工具**：`ft_get_hk_candlesticks`（category: `港股数据/行情数据`）。返回统一 MCP 输出：`structuredContent.metadata` + `structuredContent.data`；`content[0].text` 是同值的序列化 JSON，不额外返回 Markdown。输入参数 / 输出参数 / 数据样例见下文。
 > 文中 `Response`、`items`、`records`、`code`、`message` 等名称仅为字段说明；MCP 对外固定为上述 `metadata/data`。
 
-- 描述：按港股代码和日期范围查询历史 K 线，支持日、月、季和年周期以及前复权和不复权。提示：`interval_value` 仅支持 1；港股代码支持纯数字或 `.HK` 后缀。
-- 数据范围：以服务端返回为准
-- 单次限量：`limit` 可选，无默认值、无上限校验；日 K 在 SQL 层 `LIMIT` 下推，其它周期聚合后内存保留最近 `limit` 根
+- 描述：按交易代码和日期范围查询港股 K 线，支持日、月、季、年周期以及前复权和不复权，不提供分钟周期；周期数值仅支持 1，可选择保留最近指定数量的 K 线。
+- 数据范围：按日期范围查询
+- 单次限量：`limit` 可选，无默认值；传入时返回最近 `limit` 根 K 线
 - 提示：
-  - 对外 v1 仅暴露 GET（底层 v0 同时支持 GET+POST）。
-  - 时间参数为日期（`since_date` / `until_date`，YYYY-MM-DD），非时间戳；与 F3 `hk-stock-candlesticks`（毫秒戳，且仅分钟周期最多覆盖 3 个自然日）是两套独立接口。
+  - 时间参数 `since_date` / `until_date` 使用 YYYY-MM-DD 日期格式。
   - 港股代码内部规范化为 5 位数字 + `.HK`。
   - 复权 `adjust_kind` 默认 forward（前复权），仅 forward / none 两档。
 
@@ -33,25 +32,23 @@
 | MCP 字段 | 类型 | 必填 | 描述 |
 |----------|------|------|------|
 | metadata | object | Y | 契约版本、数据来源、工具名、业务口径、总量、分页、返回条数、截断状态及 warnings |
-| data | array | Y | 归一化后的业务数据项；元素字段见下方 |
+| data | array | Y | 归一化后的业务数据项 |
 
 ### data 业务字段
 
-HkCandlestick：
-
 | 名称 | 类型 | 默认显示 | 描述 |
 |------|------|---------|------|
+| close | decimal | Y | 收盘价 |
 | date | date | Y | 交易日期 |
-| open | decimal | Y | 开盘价 |
 | high | decimal | Y | 最高价 |
 | low | decimal | Y | 最低价 |
-| close | decimal | Y | 收盘价 |
-| volume | int64 | Y | 成交量 |
+| open | decimal | Y | 开盘价 |
 | turnover | decimal | Y | 成交额 |
+| volume | int64 | Y | 成交量 |
 
 ## 调用方法（MCP）
 
-> MCP 工具名 `ft_get_hk_candlesticks`。MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
+> MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
 
 **curl**：
 
@@ -63,7 +60,6 @@ MCP_BASE_URL="<MCP_BASE_URL>"
 check_mcp_response() {
   local response=$1
   printf '%s\n' "$response"
-  # MCP 业务与协议错误仍可能使用 HTTP 200，必须检查 JSON-RPC 响应。
   if printf '%s\n' "$response" | grep -Eq '"isError"[[:space:]]*:[[:space:]]*true|"error"[[:space:]]*:[[:space:]]*\{'; then
     return 1
   fi
@@ -93,7 +89,7 @@ CALL_RESPONSE=$(curl -fsS -m 60 -X POST "$MCP_BASE_URL" \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
   -H "MCP-Protocol-Version: 2025-11-25" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_get_hk_candlesticks","arguments":{"trade_code":"00700.HK","interval_unit":"day","until_date":"2026-06-23"}}}')
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_get_hk_candlesticks","arguments":{"trade_code":"00700.HK","interval_unit":"day","interval_value":1,"since_date":"2026-06-16","until_date":"2026-06-24","limit":2}}}')
 
 check_mcp_response "$CALL_RESPONSE"
 ```
@@ -116,9 +112,7 @@ async def main():
             await session.initialize()
             result = await session.call_tool(
                 'ft_get_hk_candlesticks',
-                {'trade_code': '00700.HK',
-                 'interval_unit': 'day',
-                 'until_date': '2026-06-23'},
+                {'trade_code': '00700.HK', 'interval_unit': 'day', 'interval_value': 1, 'since_date': '2026-06-16', 'until_date': '2026-06-24', 'limit': 2},
             )
             if result.is_error:
                 raise RuntimeError(result.content[0].text)
@@ -131,10 +125,8 @@ asyncio.run(main())
 
 ## 数据样例
 
-`trade_code=00700.HK`（腾讯控股）、`interval_unit=day`、`2026-06-10~17` 查询结果节选（K 线数组，按交易日倒序；核心列）：
-
 | date | open | high | low | close | volume | turnover |
-|------|------|------|-----|-------|--------|----------|
+|------|------|------|------|------|------|------|
 | 2026-06-16 | 462.60 | 462.60 | 445.40 | 447.40 | 24323142 | 10927700.96 |
-| 2026-06-15 | 475.00 | 476.80 | 457.80 | 459.60 | 19748938 | 9161148.87 |
+| 2026-06-17 | 445.60 | 454.00 | 445.40 | 445.40 | 16962334 | 7594397.84 |
 | ... | ... | ... | ... | ... | ... | ... |

@@ -3,7 +3,7 @@
 > **MCP 工具**：`ft_get_etf_components_handler`（category: `ETF专题`）。返回统一 MCP 输出：`structuredContent.metadata` + `structuredContent.data`；`content[0].text` 是同值的序列化 JSON，不额外返回 Markdown。输入参数 / 输出参数 / 数据样例见下文。
 > 文中 `Response`、`items`、`records`、`code`、`message` 等名称仅为字段说明；MCP 对外固定为上述 `metadata/data`。
 
-- 描述：查询单只 ETF 的成份股清单，返回成份代码、成份名称和 ETF 标的代码。提示：`symbol` 必填，需带交易所后缀，例如 `510300.XSHG`。
+- 描述：根据标的代码查询单只 ETF 的最新成份股清单，包含 ETF 标的代码、成份代码和成份名称。
 - 数据范围：无时间维度，最新快照（成份股当前构成）
 - 单次限量：无分页，单只 ETF 全部成份一次返回
 - 提示：
@@ -26,19 +26,19 @@
 | MCP 字段 | 类型 | 必填 | 描述 |
 |----------|------|------|------|
 | metadata | object | Y | 契约版本、数据来源、工具名、业务口径、总量、分页、返回条数、截断状态及 warnings |
-| data | array | Y | 归一化后的业务数据项；元素字段见下方 |
+| data | array | Y | 归一化后的业务数据项 |
 
 ### data 业务字段
 
 | 名称 | 类型 | 默认显示 | 描述 |
 |------|------|---------|------|
+| components | array | Y | 成份代码列表，与 components_name 同序对齐 |
+| components_name | array | Y | 成份名称列表（中文），与 components 同序对齐 |
 | symbol | string | Y | 标的代码 |
-| components | array[string] | Y | 成份代码列表，与 components_name 同序对齐 |
-| components_name | array[string] | Y | 成份名称列表（中文），与 components 同序对齐 |
 
 ## 调用方法（MCP）
 
-> MCP 工具名 `ft_get_etf_components_handler`。MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
+> MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
 
 **curl**：
 
@@ -50,7 +50,6 @@ MCP_BASE_URL="<MCP_BASE_URL>"
 check_mcp_response() {
   local response=$1
   printf '%s\n' "$response"
-  # MCP 业务与协议错误仍可能使用 HTTP 200，必须检查 JSON-RPC 响应。
   if printf '%s\n' "$response" | grep -Eq '"isError"[[:space:]]*:[[:space:]]*true|"error"[[:space:]]*:[[:space:]]*\{'; then
     return 1
   fi
@@ -116,9 +115,7 @@ asyncio.run(main())
 
 ## 数据样例
 
-510300.XSHG 沪深300ETF 成份股（共 300 只，节选）：
-
 | symbol | components | components_name |
-|--------|------------|-----------------|
-| 510300.XSHG | [000001.XSHE, 000002.XSHE, 000063.XSHE, 000100.XSHE, ...] | [平安银行, 万科A, 中兴通讯, TCL科技, ...] |
+|------|------|------|
+| 510300.XSHG | ['000001.XSHE', '000002.XSHE', '000063.XSHE', '000100.XSHE',… | ['平安银行', '万  科Ａ', '中兴通讯', 'TCL科技', '中联重科', '申万宏源', '东方盛虹', '… |
 | ... | ... | ... |
