@@ -3,8 +3,8 @@
 > **MCP 工具**：`ft_stock_ipos`（category: `股票数据/基础数据`）。返回统一 MCP 输出：`structuredContent.metadata` + `structuredContent.data`；`content[0].text` 是同值的序列化 JSON，不额外返回 Markdown。输入参数 / 输出参数 / 数据样例见下文。
 > 文中 `Response`、`items`、`records`、`code`、`message` 等名称仅为字段说明；MCP 对外固定为上述 `metadata/data`。
 
-- 描述：获取 A 股 IPO（新股发行）信息。每项含发行价、发行数量、网上发行数量、发行市盈率、行业市盈率、申购上限、申购代码、申购日期、上市日期等，带标的代码。提示：仅支持分页，不支持筛选；需带 total 的分页请用 `stock-ipos/paginated`。
-- 数据范围：以服务端返回为准
+- 描述：获取 A 股 IPO（新股发行）信息，包括标的代码、发行价、发行数量、网上发行数量、发行市盈率、行业市盈率、申购上限、申购代码、申购日期和上市日期等。
+- 数据范围：按交易日查询
 - 单次限量：分页返回，由 page/page_size 控制（按 pagination 截断，不带 total）
 - 提示：
   - 仅支持分页，不支持筛选；需带 total 的分页请用 `stock-ipos/paginated`。
@@ -26,28 +26,26 @@
 | MCP 字段 | 类型 | 必填 | 描述 |
 |----------|------|------|------|
 | metadata | object | Y | 契约版本、数据来源、工具名、业务口径、总量、分页、返回条数、截断状态及 warnings |
-| data | array | Y | 归一化后的业务数据项；元素字段见下方 |
+| data | array | Y | 归一化后的业务数据项 |
 
 ### data 业务字段
 
-StockIpo：
-
 | 名称 | 类型 | 默认显示 | 描述 |
 |------|------|---------|------|
-| symbol | string | Y | 标的代码 |
-| price | decimal | Y | 发行价格 |
-| shares | i64 | Y | 发行数量 |
+| industry_pe | decimal | Y | 行业市盈率 |
+| listing_date | date | Y | 上市日期 |
+| max_subscription_shares | i64 | Y | 申购上限 |
 | online_shares | i64 | Y | 网上发行数量 |
 | pe | decimal | Y | 发行市盈率 |
-| industry_pe | decimal | Y | 行业市盈率 |
-| max_subscription_shares | i64 | Y | 申购上限 |
-| subscription_symbol_id | string | Y | 申购代码 |
+| price | decimal | Y | 发行价格 |
+| shares | i64 | Y | 发行数量 |
 | subscription_date | date | Y | 申购日期 |
-| listing_date | date | Y | 上市日期 |
+| subscription_symbol_id | string | Y | 申购代码 |
+| symbol | string | Y | 标的代码 |
 
 ## 调用方法（MCP）
 
-> MCP 工具名 `ft_stock_ipos`。MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
+> MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
 
 **curl**：
 
@@ -59,7 +57,6 @@ MCP_BASE_URL="<MCP_BASE_URL>"
 check_mcp_response() {
   local response=$1
   printf '%s\n' "$response"
-  # MCP 业务与协议错误仍可能使用 HTTP 200，必须检查 JSON-RPC 响应。
   if printf '%s\n' "$response" | grep -Eq '"isError"[[:space:]]*:[[:space:]]*true|"error"[[:space:]]*:[[:space:]]*\{'; then
     return 1
   fi
@@ -89,7 +86,7 @@ CALL_RESPONSE=$(curl -fsS -m 60 -X POST "$MCP_BASE_URL" \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
   -H "MCP-Protocol-Version: 2025-11-25" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_stock_ipos","arguments":{}}}')
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_stock_ipos","arguments":{"page":1,"page_size":2}}}')
 
 check_mcp_response "$CALL_RESPONSE"
 ```
@@ -112,7 +109,7 @@ async def main():
             await session.initialize()
             result = await session.call_tool(
                 'ft_stock_ipos',
-                {},
+                {'page': 1, 'page_size': 2},
             )
             if result.is_error:
                 raise RuntimeError(result.content[0].text)
@@ -125,10 +122,8 @@ asyncio.run(main())
 
 ## 数据样例
 
-page=1&page_size=2 节选：
-
 | symbol | symbol_name | subscription_date | price | pe | shares | online_shares |
-|--------|-------------|-------------------|-------|-----|--------|---------------|
-| 001248.SZ | 华润新能源 | 2026-06-22 | null | null | 2423343000 | 632176000 |
-| 920193.BJ | ... | 2026-06-17 | 8.52 | 14.98 | 28000000 | 25200000 |
+|------|------|------|------|------|------|------|
+| 301688.XSHE | null | 2026-08-20 | null | null | 33333334 | 7000000 |
+| 688835.XSHG | null | 2026-08-14 | null | null | 24987677 | 5997000 |
 | ... | ... | ... | ... | ... | ... | ... |

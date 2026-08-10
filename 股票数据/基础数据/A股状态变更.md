@@ -1,30 +1,49 @@
 # A股状态变更（MCP 工具 `ft_get_stk_status_change`）
 
-> **MCP 工具**：`ft_get_stk_status_change`（category: `股票数据/基础数据`）。返回统一 MCP 输出：`structuredContent.metadata` + `structuredContent.data`；`content[0].text` 为同值 JSON。
+> **MCP 工具**：`ft_get_stk_status_change`（category: `股票数据/基础数据`）。返回统一 MCP 输出：`structuredContent.metadata` + `structuredContent.data`；`content[0].text` 是同值的序列化 JSON，不额外返回 Markdown。输入参数 / 输出参数 / 数据样例见下文。
+> 文中 `Response`、`items`、`records`、`code`、`message` 等名称仅为字段说明；MCP 对外固定为上述 `metadata/data`。
 
-- 描述：查询 A 股上市、暂停上市、终止上市等状态变更记录。
-- 提示：过滤参数均可选；不传过滤条件时结果可能较大，不分页。
+- 描述：查询 A 股的上市、退市、暂停上市等状态变更记录，支持按 `trade_code`、`change_date`、`change_type` 任意组合筛选。
+- 数据范围：按变更日期查询（覆盖 1990 年以来 A 股状态变更记录，含上市、暂停上市、终止上市、退市整理期等类型）
+- 单次限量：无分页；`trade_code` 未填时可能返回全表结果，调用方需注意响应大小
+- 提示：
+  - 三个过滤参数均可选，可任意组合，亦可全部不填（可能返回较大响应体）。
+  - `trade_code` 支持逗号分隔多个代码，如 `600848.SH` 或 `600848.SH,000001.SZ`。
+  - `change_date`、`change_type` 按等值精确匹配。
+  - 日期参数格式为 `YYYYMMDD`（如 `20240101`），非时间戳。
 
 ## 输入参数
 
 | 名称 | 类型 | 必选 | 描述 |
 |------|------|------|------|
-| trade_code | string | N | 带市场后缀的股票代码；可用逗号分隔多个代码 |
-| change_date | string | N | 变更日期，`YYYYMMDD`，精确匹配 |
-| change_type | string | N | 变更类型，例如上市、退市、暂停上市 |
+| trade_code | string | N | 股票代码（带 .SZ/.SH 后缀），支持逗号分隔多个，如 `600848.SH` 或 `600848.SH,000001.SZ`；不填表示不按代码过滤 |
+| change_date | string | N | 变更日期，精确过滤，`YYYYMMDD` 格式 |
+| change_type | string | N | 变更类型，精确过滤，常见值如 `上市`、`退市`、`暂停上市` |
 
 ## 输出参数
 
-| 字段 | 类型 | 描述 |
-|------|------|------|
-| trade_code / name | string | 证券代码 / 名称 |
-| change_date | string | 变更日期，`YYYYMMDD` |
-| change_type | string | 状态变更类型 |
-| change_details | string | 变更详情，可能为空字符串 |
+> MCP 固定输出信封为 `structuredContent.metadata` + `structuredContent.data`；`content[0].text` 是与其同值的序列化 JSON，不是 Markdown。
+>
+> `items` / `records` / `code` / `message` 等传输字段不会直接出现在 MCP 结果中；分页与截断信息统一归入 `metadata`。
+
+| MCP 字段 | 类型 | 必填 | 描述 |
+|----------|------|------|------|
+| metadata | object | Y | 契约版本、数据来源、工具名、业务口径、总量、分页、返回条数、截断状态及 warnings |
+| data | array | Y | 归一化后的业务数据项 |
+
+### data 业务字段
+
+| 名称 | 类型 | 默认显示 | 描述 |
+|------|------|---------|------|
+| change_date | string | Y | 变更日期（`YYYYMMDD`） |
+| change_details | string | Y | 变更说明 |
+| change_type | string | Y | 变更类型（如上市、退市、暂停上市） |
+| name | string | Y | 股票名称 |
+| trade_code | string | Y | 股票代码（带 .SZ/.SH 后缀） |
 
 ## 调用方法（MCP）
 
-> MCP 工具名 `ft_get_stk_status_change`。MCP Streamable HTTP 要求先 `initialize` 获取 `Mcp-Session-Id`，再发送 `notifications/initialized`，最后调用 `tools/call`。
+> MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
 
 **curl**：
 
@@ -36,7 +55,6 @@ MCP_BASE_URL="<MCP_BASE_URL>"
 check_mcp_response() {
   local response=$1
   printf '%s\n' "$response"
-  # MCP 业务与协议错误仍可能使用 HTTP 200，必须检查 JSON-RPC 响应。
   if printf '%s\n' "$response" | grep -Eq '"isError"[[:space:]]*:[[:space:]]*true|"error"[[:space:]]*:[[:space:]]*\{'; then
     return 1
   fi
@@ -102,6 +120,7 @@ asyncio.run(main())
 
 ## 数据样例
 
-```json
-{"trade_code":"600848.SH","name":"上海临港","change_date":"19940324","change_type":"上市","change_details":""}
-```
+| trade_code | name | change_date | change_type | change_details |
+|------|------|------|------|------|
+| 600848.SH | 上海临港 | 19940324 | 上市 |  |
+| ... | ... | ... | ... | ... |

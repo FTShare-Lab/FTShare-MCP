@@ -3,14 +3,13 @@
 > **MCP 工具**：`ft_etf_adjust_factor`（category: `ETF专题`）。返回统一 MCP 输出：`structuredContent.metadata` + `structuredContent.data`；`content[0].text` 是同值的序列化 JSON，不额外返回 Markdown。输入参数 / 输出参数 / 数据样例见下文。
 > 文中 `Response`、`items`、`records`、`code`、`message` 等名称仅为字段说明；MCP 对外固定为上述 `metadata/data`。
 
-- 描述：查询 ETF 复权因子（当日复权因子 + 截至当日累计复权因子）。提示：`trade_date` 为空时默认当天，非交易日回退到前一交易日；`symbol` 输出统一为 `symbol.suffix` 格式（如 `510300.SH`）；公网实测每个标的当前仅返回最新交易日 1 条，未见历史多日序列。
-- 数据范围：每标的仅保留最新交易日复权因子快照（跨 510300/510050/159915/588000/510500 探测，均只有当日 1 条，无历史序列）
-- 单次限量：分页返回，默认 `page=1`、`page_size` 由后端定；单标的最新快照仅 1 条
+- 描述：查询 ETF 当日复权因子和截至当日累计复权因子。指定 `trade_date` 可查询单日快照，未指定 `symbol` 时覆盖全部标的；指定 `start_date` 与 `end_date` 可查询区间内各交易日数据，区间查询必须同时指定 `symbol`。
+- 数据范围：每个标的仅返回最新交易日的复权因子快照，无历史序列
+- 单次限量：分页返回，默认 `page=1`、`page_size` 默认 50；单标的最新快照仅 1 条
 - 提示：
   - 未指定 `symbol` 时仅支持单日扫描；区间扫描必须指定 `symbol`。
   - `trade_date` 为空时默认当天，非交易日回退到前一交易日。
   - `symbol` 输出统一为 `symbol.suffix` 格式（如 `510300.SH`）。
-  - 公网实测每个标的当前仅返回最新交易日 1 条，未见历史多日序列。
 
 ## 输入参数
 
@@ -32,22 +31,20 @@
 | MCP 字段 | 类型 | 必填 | 描述 |
 |----------|------|------|------|
 | metadata | object | Y | 契约版本、数据来源、工具名、业务口径、总量、分页、返回条数、截断状态及 warnings |
-| data | array | Y | 归一化后的业务数据项；元素字段见下方 |
+| data | array | Y | 归一化后的业务数据项 |
 
 ### data 业务字段
 
-AdjustFactorItem：
-
 | 名称 | 类型 | 默认显示 | 描述 |
 |------|------|---------|------|
-| symbol | string | Y | ETF 代码，统一输出 symbol.suffix 格式 |
-| trade_date | string | Y | 交易日 YYYYMMDD |
 | adj_factor | f64 | Y | 当日复权因子 |
 | ex_adj_factor | f64 | Y | 截至当日累计复权因子 |
+| symbol | string | Y | ETF 代码，统一输出 symbol.suffix 格式 |
+| trade_date | string | Y | 交易日 YYYYMMDD |
 
 ## 调用方法（MCP）
 
-> MCP 工具名 `ft_etf_adjust_factor`。MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
+> MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
 
 **curl**：
 
@@ -59,7 +56,6 @@ MCP_BASE_URL="<MCP_BASE_URL>"
 check_mcp_response() {
   local response=$1
   printf '%s\n' "$response"
-  # MCP 业务与协议错误仍可能使用 HTTP 200，必须检查 JSON-RPC 响应。
   if printf '%s\n' "$response" | grep -Eq '"isError"[[:space:]]*:[[:space:]]*true|"error"[[:space:]]*:[[:space:]]*\{'; then
     return 1
   fi
@@ -89,7 +85,7 @@ CALL_RESPONSE=$(curl -fsS -m 60 -X POST "$MCP_BASE_URL" \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
   -H "MCP-Protocol-Version: 2025-11-25" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_etf_adjust_factor","arguments":{}}}')
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_etf_adjust_factor","arguments":{"symbol":"510300.SH","start_date":"20260623","end_date":"20260624","limit":2}}}')
 
 check_mcp_response "$CALL_RESPONSE"
 ```
@@ -112,7 +108,7 @@ async def main():
             await session.initialize()
             result = await session.call_tool(
                 'ft_etf_adjust_factor',
-                {},
+                {'symbol': '510300.SH', 'start_date': '20260623', 'end_date': '20260624', 'limit': 2},
             )
             if result.is_error:
                 raise RuntimeError(result.content[0].text)
@@ -125,9 +121,7 @@ asyncio.run(main())
 
 ## 数据样例
 
-510300.XSHG 沪深300ETF 最新交易日复权因子（每标的仅当日 1 条）：
-
 | symbol | trade_date | adj_factor | ex_adj_factor |
-|--------|------------|------------|---------------|
-| 510300.SH | 20260617 | 1.0 | 0.470035 |
+|------|------|------|------|
+| 510300.SH | 20260623 | 1.0 | 0.470035 |
 | ... | ... | ... | ... |

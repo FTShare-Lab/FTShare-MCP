@@ -10,7 +10,7 @@ For international developers, this repository can be understood as **FTShare MCP
 
 > This repository focuses on **MCP tool documentation and integration instructions**. It does not contain the MCP Server source code. The public MCP service is provided by the FTShare data service.
 
-The current public documentation exposes **199 tools**: 194 `ft_*` financial data tools and 5 convenience query tools. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. The live `tools/list` response is the source of truth.
+The current public documentation exposes **207 tools**: 202 `ft_*` financial data tools and 5 convenience query tools. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. The live `tools/list` response is the source of truth.
 
 ## Public MCP Endpoint
 

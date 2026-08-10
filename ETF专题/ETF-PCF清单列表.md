@@ -3,13 +3,12 @@
 > **MCP 工具**：`ft_etf_pcf_list_handler`（category: `ETF专题`）。返回统一 MCP 输出：`structuredContent.metadata` + `structuredContent.data`；`content[0].text` 是同值的序列化 JSON，不额外返回 Markdown。输入参数 / 输出参数 / 数据样例见下文。
 > 文中 `Response`、`items`、`records`、`code`、`message` 等名称仅为字段说明；MCP 对外固定为上述 `metadata/data`。
 
-- 描述：查询指定交易日的 ETF 申购赎回清单文件信息，返回 ETF 代码、日期和文件名。提示：`date` 必填，格式 YYYYMMDD。
+- 描述：获取指定交易日的 ETF PCF（申购赎回清单）文件列表，包含 ETF 代码、日期和 PCF 文件名；如需 XML 内容，需另行下载对应 PCF 文件。
 - 数据范围：无时间维度（按交易日取），指定交易日 PCF 文件清单
 - 单次限量：`page` 默认 1、`page_size` 默认 20、最大 100
 - 提示：
   - `date` 必填，YYYYMMDD 格式，传非有效日期会被拒。
   - 列表只返回文件元信息，实际 PCF 内容（XML）需通过下载接口按 filename 获取。
-  - 真实数据样例需按公共服务返回补充。
 
 ## 输入参数
 
@@ -28,21 +27,19 @@
 | MCP 字段 | 类型 | 必填 | 描述 |
 |----------|------|------|------|
 | metadata | object | Y | 契约版本、数据来源、工具名、业务口径、总量、分页、返回条数、截断状态及 warnings |
-| data | array | Y | 归一化后的业务数据项；元素字段见下方 |
+| data | array | Y | 归一化后的业务数据项 |
 
 ### data 业务字段
 
-EtfPcfItem：
-
 | 名称 | 类型 | 默认显示 | 描述 |
 |------|------|---------|------|
-| etf_code | int | Y | ETF 代码 |
 | date | int | Y | 日期 YYYYMMDD |
+| etf_code | int | Y | ETF 代码 |
 | filename | string | Y | PCF 文件名，如 pcf_159152_20260316.xml |
 
 ## 调用方法（MCP）
 
-> MCP 工具名 `ft_etf_pcf_list_handler`。MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
+> MCP Streamable HTTP 要求**先 initialize 拿 `Mcp-Session-Id`，发送 `notifications/initialized`，再 `tools/call`**，后续请求同时带该 Session ID 和协商后的 `MCP-Protocol-Version`。返回统一 `metadata/data` 结构化输出；`content[0].text` 为同值 JSON 文本，不额外返回 Markdown。
 
 **curl**：
 
@@ -54,7 +51,6 @@ MCP_BASE_URL="<MCP_BASE_URL>"
 check_mcp_response() {
   local response=$1
   printf '%s\n' "$response"
-  # MCP 业务与协议错误仍可能使用 HTTP 200，必须检查 JSON-RPC 响应。
   if printf '%s\n' "$response" | grep -Eq '"isError"[[:space:]]*:[[:space:]]*true|"error"[[:space:]]*:[[:space:]]*\{'; then
     return 1
   fi
@@ -84,7 +80,7 @@ CALL_RESPONSE=$(curl -fsS -m 60 -X POST "$MCP_BASE_URL" \
   -H "Content-Type: application/json" \
   -H "Mcp-Session-Id: $SID" \
   -H "MCP-Protocol-Version: 2025-11-25" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_etf_pcf_list_handler","arguments":{"date":20260624}}}')
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ft_etf_pcf_list_handler","arguments":{"date":20260624,"page":1,"page_size":2}}}')
 
 check_mcp_response "$CALL_RESPONSE"
 ```
@@ -107,7 +103,7 @@ async def main():
             await session.initialize()
             result = await session.call_tool(
                 'ft_etf_pcf_list_handler',
-                {'date': 20260624},
+                {'date': 20260624, 'page': 1, 'page_size': 2},
             )
             if result.is_error:
                 raise RuntimeError(result.content[0].text)
@@ -120,11 +116,8 @@ asyncio.run(main())
 
 ## 数据样例
 
-2026-06-17 当日 PCF 清单（共 1563 只，节选）：
-
 | etf_code | date | filename |
-|----------|------|----------|
-| 159001 | 20260617 | pcf_159001_20260617.xml |
-| 159003 | 20260617 | pcf_159003_20260617.xml |
-| 159005 | 20260617 | pcf_159005_20260617.xml |
+|------|------|------|
+| 159001 | 20260624 | pcf_159001_20260624.xml |
+| 159003 | 20260624 | pcf_159003_20260624.xml |
 | ... | ... | ... |
