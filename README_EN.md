@@ -1,255 +1,221 @@
-# FTShare MCP
+<p align="center">
+  <img src="./docs/assets/readme/hero-en.svg" width="100%" alt="FTShare MCP brings financial data and FTShare factors to AI agents">
+</p>
 
-[中文](README.md) | [English](README_EN.md)
+<p align="center">
+  <a href="README.md">中文</a> · <a href="README_EN.md">English</a>
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<p align="center">
+  <img src="https://img.shields.io/badge/MCP-Streamable_HTTP-3563E9" alt="MCP Streamable HTTP">
+  <img src="https://img.shields.io/badge/service-hosted-111827" alt="Hosted service">
+  <img src="https://img.shields.io/badge/tools-read--only-667085" alt="Read-only tools">
+  <a href="https://github.com/FTShare-Lab/FTShare-MCP/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-667085" alt="MIT License"></a>
+</p>
 
-`FTShare-MCP` is the MCP tool documentation and integration guide for FTShare financial data capabilities. It is designed for MCP-compatible clients, Agent applications, and automated investment research workflows. This repository provides the public MCP endpoint, calling workflow, tool index, parameter descriptions, and examples.
+<p align="center">
+  <strong>Reliable financial context for AI.</strong><br>
+  FTShare MCP lets MCP-compatible AI clients call financial data and FTShare factor tools through natural language.
+</p>
 
-For international developers, this repository can be understood as **FTShare MCP tools for financial data, market data, quantitative research, and AI Agent investment workflows**.
+<p align="center">
+  <a href="https://ftai.chat/?tab=ft-share"><strong>FTShare</strong></a>
+  · <a href="https://ftai.chat/me/profile">Get an API key</a>
+  · <a href="#connect-in-60-seconds">Connect</a>
+  · <a href="https://github.com/FTShare-Lab/FTShare-MCP/issues">Issues</a>
+</p>
 
-> This repository focuses on **MCP tool documentation and integration instructions**. It does not contain the MCP Server source code. The public MCP service is provided by the FTShare data service.
+> [!IMPORTANT]
+> This repository contains MCP tool documentation, parameter references, and integration examples. It does not contain the MCP server source. FTShare hosts the public service, and requests require the `FTSHARE_API_KEY` header.
 
-The current public documentation exposes **207 tools**: 202 `ft_*` financial data tools and 5 convenience query tools. Together they cover market data, financial statements, macro data, funds, futures, bonds, US stocks, Hong Kong stocks, and related datasets. The live `tools/list` response is the source of truth.
+## What is FTShare MCP?
 
-## Public MCP Endpoint
+FTShare MCP is a hosted, read-only financial-data service for AI agents. Claude Code, Codex, and other Streamable HTTP MCP clients can turn natural-language questions into standard tool calls and receive structured, verifiable results.
 
-This documentation uses `<MCP_BASE_URL>` as the placeholder for the MCP Streamable HTTP endpoint. The public MCP endpoint is:
+<p align="center">
+  <a href="https://ftai.chat/?tab=ft-share"><img src="./docs/assets/readme/ftshare-website.png" width="100%" alt="FTShare product banner showing SDK, MCP, and Skills access"></a>
+</p>
 
-```bash
-MCP_BASE_URL="https://market.ft.tech/gateway/mcp"
+<p align="center"><sub>FTShare's public product page is currently in Chinese. Click the image to open it.</sub></p>
+
+## Connect in 60 seconds
+
+### 1. Get an API key
+
+Sign in to the [FTShare account center](https://ftai.chat/me/profile) and obtain the API key for your account.
+
+Every request uses this HTTP header:
+
+```text
+FTSHARE_API_KEY: YOUR_FTSHARE_API_KEY
 ```
 
-When copying examples from tool documents, replace `<MCP_BASE_URL>` with the URL above.
+Never commit a real API key to Git, issues, logs, or public screenshots.
 
-- **MCP endpoint placeholder**: `<MCP_BASE_URL>` (Streamable HTTP)
-- **Protocol flow**: call `initialize` to negotiate the version and get `Mcp-Session-Id`, send `notifications/initialized`, then call tools with the session ID and `MCP-Protocol-Version`
-- **Return format**: one JSON `TextContent` block plus an identical `structuredContent`; no extra Markdown block
-- **Live descriptor**: `tools/list` returns `title`, `inputSchema`, `outputSchema`, `annotations`, and `_meta`
+### 2. Configure a client
 
-> **Deployment status**: The output format below is the unified contract implemented by the
-> matching new `ftshare-mcp-server`. Check live `tools/list` / `tools/call` responses to confirm
-> whether a public environment has been upgraded. If a documented tool still lacks `outputSchema`
-> or its successful result has no `structuredContent`, that environment is still running an older server.
+#### Claude Code
 
-## Use Cases
+```bash
+claude mcp add --transport http --scope user \
+  --header "FTSHARE_API_KEY: YOUR_FTSHARE_API_KEY" \
+  ftshare https://market.ft.tech/gateway/mcp
+```
 
-- MCP-compatible clients such as Claude Code, Codex, Cursor, and OpenClaw
-- Financial data tool calls in Agent-based investment research workflows
-- Automated queries for market data, financial statements, macro data, funds, futures, bonds, US stocks, and Hong Kong stocks
-- Data access validation for investment research, quantitative research, and financial application development
+Run `/mcp` in Claude Code and confirm that `ftshare` is connected.
 
-## Calling Workflow
+#### Codex
 
-1. Confirm the MCP endpoint. For the public environment, use `https://market.ft.tech/gateway/mcp`.
-2. Choose a tool from the tool index or from the result of `tools/list`.
-3. Check parameters in the corresponding tool document or from the live `inputSchema`.
-4. Initialize a session by calling MCP `initialize` and reading `Mcp-Session-Id`.
-5. Complete initialization by sending `notifications/initialized`; a successful HTTP response is 202 with an empty body.
-6. Call `tools/call` with `Mcp-Session-Id` and the negotiated `MCP-Protocol-Version`, where `name` is the tool name and `arguments` is the business parameter object.
-7. For a raw JSON-RPC response, read `result.structuredContent` first. `result.content[0].text` is the serialized JSON form of the same value. In the MCP Python SDK, the corresponding attribute is `result.structured_content`.
-8. Unknown tools and malformed request shapes are JSON-RPC protocol errors. Input validation, upstream API failures, and business execution failures are returned in `result` with `isError: true`.
+Add the following to `~/.codex/config.toml`:
 
-## Unified Output Format
+```toml
+[mcp_servers.ftshare]
+url = "https://market.ft.tech/gateway/mcp"
+http_headers = { FTSHARE_API_KEY = "YOUR_FTSHARE_API_KEY" }
+```
 
-All tools use the same structured output schema. Tool-specific fields are stored in the `data` array:
+Then verify the configuration:
+
+```bash
+codex mcp get ftshare
+```
+
+Start a new Codex task after changing the configuration so tool definitions reload. The config contains a secret and must not be committed publicly.
+
+#### Other MCP clients
+
+- Transport: `Streamable HTTP`
+- URL: `https://market.ft.tech/gateway/mcp`
+- Header: `FTSHARE_API_KEY: YOUR_FTSHARE_API_KEY`
+
+Field names vary by client. Follow that client's documentation for custom HTTP headers.
+
+### 3. Ask a factor-data question
+
+```text
+Use FTShare to find W-bottom pattern annotations for 600519.
+```
+
+The agent should select this real tool and input shape:
 
 ```json
 {
-  "metadata": {
-    "schema_version": "1.0",
-    "source": "ftshare",
-    "tool": "ft_get_cb_lists_handler",
-    "operation": "get_cb_lists_handler",
-    "total": 1,
-    "pagination": {
-      "supported": false,
-      "page": 1,
-      "page_size": 1,
-      "pages": 1,
-      "has_more": false
-    },
-    "returned": 1,
-    "truncated": false,
-    "warnings": []
-  },
-  "data": [
-    {
-      "cb_id": 110001,
-      "full_name": "Example convertible bond",
-      "stock_id": 600001,
-      "exchange": 3553
-    }
-  ]
+  "tool": "ft_v3_kline_pattern_annotations",
+  "arguments": {
+    "symbol": "600519",
+    "pattern": "W底",
+    "page": 1,
+    "page_size": 5
+  }
 }
 ```
 
-- `metadata.schema_version`: output contract version, currently `1.0`.
-- `metadata.source`: data source, currently `ftshare`.
-- `metadata.tool`: the MCP tool name that was called.
-- `metadata.operation`: the executed business operation; `ft_*` tools use the corresponding SDK method.
-- `metadata.total`: total matched rows, or the pre-truncation local count when the upstream omits a total.
-- `metadata.pagination`: `supported`, `page`, `page_size`, `pages`, and `has_more`.
-- `metadata.returned`: rows actually included in `data`.
-- `metadata.truncated`: whether server item or output-size limits truncated the result.
-- `metadata.warnings`: deduplication, shape, or truncation notices; empty when there are none.
+> [!NOTE]
+> `symbol` is a plain six-digit code for this tool, such as `600519`; do not pass `600519.SH`. Factor data is research data, may depend on plan entitlements, and is not an investment recommendation or prediction of future returns.
 
-The complete successful `tools/call` result contains exactly one JSON text block whose parsed value equals `structuredContent`. Legacy `items` / `records` map to `data`, while `total_items` / `total_pages` map to `metadata.total` / `metadata.pagination.pages`. Markdown is not required by MCP and is not returned by default.
+## Reading results
 
-Tool execution errors do not use the successful `outputSchema`. An error result sets `isError: true`, omits `structuredContent`, and returns a sanitized message in `content[0].text`. Machine-readable errors use `{"error":{"code","message","field?","retryable","details?"}}` JSON. When alternative required groups are missing, the error omits a misleading single `field` and lists the accepted groups in `details.required_any_of`. Unknown tools and malformed JSON-RPC requests remain protocol errors.
+Successful business results live in `result.structuredContent`:
 
-## Tool Descriptors
-
-Each documented tool descriptor returned by `tools/list` aligns with the read-only MCP / OpenAI Apps SDK semantics:
-
-- `title`: human-readable tool title.
-- `inputSchema`: Draft 2020-12 input constraints; undeclared fields are rejected. The server removes Rust integer `format`, `$schema`, and `default:null`, then adds polymorphic conditional requirements and integer bounds.
-- `outputSchema`: the shared successful `metadata/data` contract.
-- `annotations`: `readOnlyHint=true`, `destructiveHint=false`, and `openWorldHint=true`.
-- `_meta.securitySchemes`: `[{"type":"noauth"}]` for OpenAI client compatibility.
-
-`structuredContent.metadata` is model-visible business result data. The descriptor sibling `_meta` carries client extension metadata; the two fields have different levels, purposes, and visibility.
-
-Runtime validators are compiled from the final public `inputSchema`. Pagination, limits, timestamps, and polymorphic conditional requirements are rejected before any upstream request. Business rules such as calendar validity, market-code matching, and range spans remain enforced by the corresponding tool implementation.
-
-## Generic Demo
-
-The following examples can call any documented tool. Change only `TOOL_NAME` and `TOOL_ARGS`.
-
-### curl
-
-```bash
-set -euo pipefail
-
-MCP_BASE_URL="https://market.ft.tech/gateway/mcp"
-TOOL_NAME="ft_get_cb_lists_handler"
-TOOL_ARGS='{}'
-
-check_mcp_response() {
-  local response=$1
-  printf '%s\n' "$response"
-  if printf '%s\n' "$response" | grep -Eq '"isError"[[:space:]]*:[[:space:]]*true|"error"[[:space:]]*:[[:space:]]*\{'; then
-    return 1
-  fi
-}
-
-INIT_PAYLOAD='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"curl-demo","version":"1.0.0"}}}'
-CALL_PAYLOAD="{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"${TOOL_NAME}\",\"arguments\":${TOOL_ARGS}}}"
-
-MCP_SESSION_ID=$(curl -fsS -m 60 -D - -o /dev/null -X POST "$MCP_BASE_URL" \
-  -H "Accept: application/json, text/event-stream" \
-  -H "Content-Type: application/json" \
-  -d "$INIT_PAYLOAD" \
-  | awk 'tolower($1)=="mcp-session-id:" {print $2}' \
-  | tr -d '\r')
-
-if [ -z "$MCP_SESSION_ID" ]; then
-  printf '%s\n' 'initialize did not return Mcp-Session-Id' >&2
-  exit 1
-fi
-
-curl -fsS -m 60 -o /dev/null -X POST "$MCP_BASE_URL" \
-  -H "Accept: application/json, text/event-stream" \
-  -H "Content-Type: application/json" \
-  -H "Mcp-Session-Id: $MCP_SESSION_ID" \
-  -H "MCP-Protocol-Version: 2025-11-25" \
-  -d '{"jsonrpc":"2.0","method":"notifications/initialized"}'
-
-CALL_RESPONSE=$(curl -fsS -m 60 -X POST "$MCP_BASE_URL" \
-  -H "Accept: application/json, text/event-stream" \
-  -H "Content-Type: application/json" \
-  -H "Mcp-Session-Id: $MCP_SESSION_ID" \
-  -H "MCP-Protocol-Version: 2025-11-25" \
-  -d "$CALL_PAYLOAD")
-
-check_mcp_response "$CALL_RESPONSE"
+```text
+structuredContent
+├── data                      business data
+└── metadata
+    ├── tool                  tool actually called
+    ├── total / returned      total and returned rows
+    ├── pagination            pagination state
+    ├── truncated             whether results were truncated
+    └── warnings              data warnings
 ```
 
-### Python
+Applications and agents should inspect `metadata.truncated`, pagination, and `warnings`, not just the text summary. Business errors set `isError=true` and return a structured error code.
 
-The examples use the official MCP Python SDK 2.x API. Install the verified version: `pip install "mcp==2.0.0"`
+## Three ways to use FTShare
 
-```python
-import asyncio
-from mcp import ClientSession
-from mcp.client.streamable_http import streamable_http_client
+| Access method | Best for | Interaction | Repository |
+|---|---|---|---|
+| **Python SDK** | Python apps, data analysis, quantitative research | pandas `DataFrame`, Python rows, raw JSON | [FTShare-python-sdk](https://github.com/FTShare-Lab/FTShare-python-sdk) |
+| **MCP** | MCP-compatible AI clients and agents | Standard MCP tools and structured results | This repository |
+| **Skill** | Agent runtimes such as Claude Code, Codex, and OpenClaw | Natural-language routing to data interfaces | [FTShare-skill](https://github.com/FTShare-Lab/FTShare-skill) |
 
-MCP_BASE_URL = "https://market.ft.tech/gateway/mcp"
-TOOL_NAME = "ft_get_cb_lists_handler"
-TOOL_ARGS = {}
+All three connect to the same FTShare financial-data service. MCP standardizes tool calls; Skill routes natural-language intent to data interfaces.
 
-async def main():
-    async with streamable_http_client(MCP_BASE_URL) as (read_stream, write_stream):
-        async with ClientSession(read_stream, write_stream) as session:
-            await session.initialize()
-            tools = await session.list_tools()
-            print([tool.name for tool in tools.tools])
-            result = await session.call_tool(TOOL_NAME, TOOL_ARGS)
-            if result.is_error:
-                raise RuntimeError(result.content[0].text)
-            print(result.structured_content)
-            print(result.content[0].text)  # Compatible JSON text identical to structuredContent.
+## Current service
 
-asyncio.run(main())
+- **Public endpoint:** `https://market.ft.tech/gateway/mcp`
+- **Transport:** MCP Streamable HTTP
+- **Authentication:** `FTSHARE_API_KEY` HTTP header
+- **Tool behavior:** read-only financial-data tools
+- **Live definitions:** use MCP `tools/list` for current names, schemas, and annotations
+
+Service versions, tool counts, and account entitlements change over time, so they are not embedded in the hero. Release notes and inventories should be updated only after a real `initialize → tools/list → tools/call` verification.
+
+## Data coverage
+
+- A-share quotes, candlesticks, limit pools, capital flows, reference data, and company data
+- ETFs, indices, funds, futures, bonds, and bullion
+- Hong Kong and US equities, macro data, announcements, research, and financial news
+- FTShare factors, including news sentiment, K-line pattern annotations, related-company Top-K, and signal snapshots
+
+## Data directories
+
+For the latest interfaces, parameters, fields, entitlements, and update status, use the official documentation:
+
+**[Latest FTShare data documentation](https://market.ft.tech/gateway/doc/p/zdxwn9lx)**
+
+The current documentation covers spot data, macroeconomics, LLM corpora, A-share data, US equities, public funds, ETFs, Hong Kong equities, futures, bonds, and indices.
+
+The A-share section is further organized into capital flows, financial statements, reference data, market data, limit-up topics, margin and securities lending, factor and characteristic data, and basic data. Characteristic data includes A-share news sentiment factors, related-company Top-K, K-line pattern annotations, supply-chain relationships, and the latest signal snapshots.
+
+Use live `tools/list` as the source of truth for tool names, counts, and parameters. Repository documents explain capabilities and examples; they do not replace the server schema.
+
+## Protocol sequence
+
+For direct protocol calls:
+
+```text
+initialize
+    ↓ receive Mcp-Session-Id
+notifications/initialized
+    ↓
+tools/list
+    ↓
+tools/call
 ```
 
-## Tool Categories
+Subsequent requests must include the session ID, negotiated MCP protocol version, and `FTSHARE_API_KEY`.
 
-| Category | Tool Count | Documentation |
-|----------|------------|---------------|
-| ETF | 10 | [ETF专题/](./ETF专题/) |
-| Bonds | 4 | [债券专题/](./债券专题/) |
-| Public Funds | 20 | [公募基金/](./公募基金/) |
-| FX Data | 1 | [外汇数据/](./外汇数据/) |
-| LLM Corpus | 5 | [大模型语料/](./大模型语料/) |
-| Macro Economy | 17 | [宏观经济/](./宏观经济/) |
-| Index Data | 10 | [指数专题/](./指数专题/) |
-| Futures Data | 4 | [期货数据/](./期货数据/) |
-| Hong Kong Stocks | 13 | [港股数据/](./港股数据/) |
-| Spot Data | 2 | [现货数据/](./现货数据/) |
-| US Stocks | 7 | [美股数据/](./美股数据/) |
-| A-share Stocks | 101 | [股票数据/](./股票数据/) |
+## Common errors
 
-### Convenience query tools
+| Code | Meaning | What to do |
+|---|---|---|
+| `MISSING_PARAMETER` | A required input is missing | Check the live `inputSchema` |
+| `INVALID_TYPE` | An input has the wrong type | Check date, symbol, and pagination types |
+| `UNKNOWN_PARAMETER` | An undeclared field was supplied | Remove fields not present in the schema |
+| `INVALID_ARGUMENT` | An input violates a constraint | Check formats and page-size limits |
+| `UPSTREAM_REJECTED` | The upstream service or entitlement rejected the request | Read the structured error and check plan access |
+| `UPSTREAM_UNAVAILABLE` | The upstream service is temporarily unavailable | Inspect `retryable` and warnings before retrying |
 
-| MCP Tool | Title | Documentation |
-|----------|-------|---------------|
-| `capital_flow` | Capital Flow | [便捷查询入口/资金流.md](./便捷查询入口/资金流.md) |
-| `daily_ohlc` | Daily OHLC | [股票数据/日频OHLC.md](./股票数据/日频OHLC.md) |
-| `intraday_kline` | Intraday Price and Minute K-line | [股票数据/分时与分钟K线.md](./股票数据/分时与分钟K线.md) |
-| `report_announcement_list` | Announcement List | [便捷查询入口/公告列表.md](./便捷查询入口/公告列表.md) |
-| `report_announcement_summary` | Announcement Summary | [大模型语料/公告摘要.md](./大模型语料/公告摘要.md) |
+## Community and support
 
-For the full tool index and individual tool documentation, see the Chinese [README.md](README.md) and the category documents. The tool names, parameter names, and examples are language-independent.
+- Questions and feature requests: [GitHub Issues](https://github.com/FTShare-Lab/FTShare-MCP/issues)
+- Product and plans: [FTShare](https://ftai.chat/?tab=ft-share)
+- API key management: [Account center](https://ftai.chat/me/profile)
+- Python SDK: [FTShare-python-sdk](https://github.com/FTShare-Lab/FTShare-python-sdk)
+- Agent Skill: [FTShare-skill](https://github.com/FTShare-Lab/FTShare-skill)
 
-## Notes
+### Join the FTShare community
 
-- The live `inputSchema` returned by `tools/list` defines parameter structure and preflight constraints; business rules such as calendar validity, market-code matching, and range spans remain defined by the tool documentation and runtime errors.
-- Tool documents cover the officially documented `ft_*` financial data tools and the listed server-level aggregation tools.
-- All documented tools use the same `metadata` / `data` structured output envelope.
-- Some tools have time-window, pagination, quota, or permission constraints.
-- Access quota, permissions, and commercial use of FTShare data interfaces are subject to FTShare data service terms.
+<p align="center">
+  <img src="./docs/assets/wechat-group-20260909.png" width="320" alt="FTShare WeChat community QR code, valid through September 9, 2026">
+</p>
 
-## Related Projects
-
-- [FTShare-python-sdk](https://github.com/FTShare-Lab/FTShare-python-sdk): FTShare financial data Python SDK for developer-facing data access
-- [FTShare-skills](https://github.com/FTShare-Lab/FTShare-skills): FTShare Agent Skills repository for data-level Skills and investment research workflow Skills
-
-## Community
-
-Chinese users are welcome to join the FTShare WeChat community group to discuss MCP integration, tool calls, financial data interfaces, Agent research workflows, and contribution directions.
-
-<img src="docs/assets/wechat-group-20260909.png" alt="FTShare WeChat community group" width="320" />
-
-> **Community rules**:
-> - Discussions should be related to FTShare, MCP integration, financial data interfaces, or Agent research workflows
-> - Advertising, promotion, and unrelated off-topic chat are not allowed
-> - For bugs, feature requests, and tool documentation issues, please open a GitHub Issue first. The group is for quick discussion and follow-up context
-
-**The QR code is valid until September 9, 2026.** If it expires, please open an Issue and the maintainers will update the invitation.
+Use GitHub Issues for bugs, feature requests, and documentation problems so they remain trackable. The QR code is valid through September 9, 2026.
 
 ## License
 
-This project documentation is released under the MIT License. See [LICENSE](LICENSE).
+Documentation and examples in this repository use the MIT License. The license does not automatically grant hosted-service quota, data rights, redistribution rights, or commercial data usage rights.
 
-The MIT License applies to the documentation and examples in this repository. It does not mean FTShare data services are available without restriction. Access quota, permissions, and commercial use of FTShare data interfaces are subject to FTShare data service terms.
+---
+
+<p align="center"><strong>FTShare</strong> · Reliable financial context for AI</p>
