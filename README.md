@@ -209,12 +209,12 @@ tools/call
 欢迎加入 FTShare 社区交流群，讨论 MCP 接入、特色因子、金融数据接口、Skill 和 Agent 使用。
 
 <p align="center">
-  <img src="./docs/assets/wechat-group-20260909.png" width="320" alt="FTShare 微信社区交流群二维码，有效期至 2026 年 9 月 9 日">
+  <img src="./docs/assets/wechat-group-20260918.png" width="320" alt="FTShare 微信社区交流群二维码，有效期至 2026 年 9 月 18 日">
 </p>
 
 > 群内用于交流使用经验和补充问题信息；Bug、功能需求和工具文档问题建议优先通过 GitHub Issues 提交。
 
-**二维码有效期至 2026 年 9 月 9 日。** 如二维码失效，请在 Issues 中留言。
+**二维码有效期至 2026 年 9 月 18 日。** 如二维码失效，请在 Issues 中留言。
 
 ## License
 
