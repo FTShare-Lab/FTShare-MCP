@@ -161,7 +161,7 @@ Service versions, tool counts, and account entitlements change over time, so the
 
 For the latest interfaces, parameters, fields, entitlements, and update status, use the official documentation:
 
-**[Latest FTShare data documentation](https://market.ft.tech/gateway/doc/p/zdxwn9lx)**
+**[Latest FTShare data documentation](https://market.ft.tech/gateway/doc)**
 
 The current documentation covers spot data, macroeconomics, LLM corpora, A-share data, US equities, public funds, ETFs, Hong Kong equities, futures, bonds, and indices.
 

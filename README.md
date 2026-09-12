@@ -161,7 +161,7 @@ structuredContent
 
 最新接口、参数、字段、数据权限和更新状态，请查看：
 
-**[FTShare 最新数据接口文档](https://market.ft.tech/gateway/doc/p/zdxwn9lx)**
+**[FTShare 最新数据接口文档](https://market.ft.tech/gateway/doc)**
 
 当前文档目录覆盖：现货数据、宏观经济、大模型语料、股票数据、美股数据、公募基金、ETF 专题、港股数据、期货数据、债券专题和指数专题。
 
