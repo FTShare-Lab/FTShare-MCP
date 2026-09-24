@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ftai.chat/?tab=ft-share"><strong>FTShare</strong></a>
+  <a href="https://ftai.chat/ftshare"><strong>FTShare</strong></a>
   · <a href="https://ftai.chat/me/profile">Get an API key</a>
   · <a href="#connect-in-60-seconds">Connect</a>
   · <a href="https://github.com/FTShare-Lab/FTShare-MCP/issues">Issues</a>
@@ -33,7 +33,7 @@
 FTShare MCP is a hosted, read-only financial-data service for AI agents. Claude Code, Codex, and other Streamable HTTP MCP clients can turn natural-language questions into standard tool calls and receive structured, verifiable results.
 
 <p align="center">
-  <a href="https://ftai.chat/?tab=ft-share"><img src="./docs/assets/readme/ftshare-website.png" width="100%" alt="FTShare product banner showing SDK, MCP, and Skills access"></a>
+  <a href="https://ftai.chat/ftshare"><img src="./docs/assets/readme/ftshare-website.png" width="100%" alt="FTShare product banner showing SDK, MCP, and Skills access"></a>
 </p>
 
 <p align="center"><sub>FTShare's public product page is currently in Chinese. Click the image to open it.</sub></p>
@@ -199,7 +199,7 @@ Subsequent requests must include the session ID, negotiated MCP protocol version
 ## Community and support
 
 - Questions and feature requests: [GitHub Issues](https://github.com/FTShare-Lab/FTShare-MCP/issues)
-- Product and plans: [FTShare](https://ftai.chat/?tab=ft-share)
+- Product and plans: [FTShare](https://ftai.chat/ftshare)
 - API key management: [Account center](https://ftai.chat/me/profile)
 - Python SDK: [FTShare-python-sdk](https://github.com/FTShare-Lab/FTShare-python-sdk)
 - Agent Skill: [FTShare-skill](https://github.com/FTShare-Lab/FTShare-skill)
