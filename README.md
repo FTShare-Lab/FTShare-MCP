@@ -93,42 +93,61 @@ codex mcp get ftshare
 ### 3. 提出一个特色数据问题
 
 ```text
-使用 FTShare 查询 600519 的 W底形态标注
+使用 FTShare 查询深圳机场（000089）在 2026 年 9 月 1 日的上升旗形标注，返回图片 hash、标注图和识别理由。
 ```
 
-Agent 应选择以下真实工具与参数：
+**返回结果**
+
+| 标的 | 快照日期 | 形态 | 状态 | 置信度 |
+|---|---|---|---|---|
+| 深圳机场（000089） | 2026-09-01 | 上升旗形 | `candidate` | 0.58 |
+
+标注区间：2026-08-27 13:00 至 2026-09-01 14:45。
+
+**图片 hash**
+
+```text
+a1eab19298a3d3bbda501330a03879d5984edcc1a64e8c271f529dec8e8f4896
+```
+
+![深圳机场上升旗形标注原图](./docs/assets/readme/000089-bull-flag-20260901.png)
+
+**识别理由（接口原文）**
+
+> 可见价格轮廓支持快速上涨旗杆、短线回撤整理和放量上破这一组结构，成交量数据也支持bar_index 64为明显放量突破。但15分钟周期、图片无价格坐标、均线和MACD缺失，且突破后不足两个完整交易日，故仅判定为上升旗形candidate，不判定为confirmed。
+
+<details>
+<summary>查看 MCP 调用参数</summary>
+
+查询标注：
 
 ```json
 {
   "tool": "ft_v3_kline_pattern_annotations",
   "arguments": {
-    "symbol": "600519",
-    "pattern": "W底",
+    "date": "20260901",
+    "symbol": "000089",
+    "pattern": "上升旗形",
     "page": 1,
     "page_size": 5
   }
 }
 ```
 
-> [!NOTE]
-> 该工具的 `symbol` 使用纯 6 位代码，例如 `600519`，不要传入 `600519.SH`。特色因子属于研究数据，具体可用范围取决于账号套餐，不构成股票推荐或未来收益判断。
+获取图片：
 
-## 返回结果怎么读
-
-成功结果位于 `result.structuredContent`：
-
-```text
-structuredContent
-├── data                      业务数据
-└── metadata
-    ├── tool                  实际调用的工具
-    ├── total / returned      总量与本次返回数量
-    ├── pagination            分页信息
-    ├── truncated             是否截断
-    └── warnings              数据告警
+```json
+{
+  "tool": "ft_v3_kline_pattern_image",
+  "arguments": {
+    "image_hash": "a1eab19298a3d3bbda501330a03879d5984edcc1a64e8c271f529dec8e8f4896"
+  }
+}
 ```
 
-应用和 Agent 不应只读取文本摘要，还要检查 `metadata.truncated`、分页状态和 `warnings`。业务错误会设置 `isError=true`，并返回结构化错误码。
+[完整请求与返回结果](./docs/examples/kline-bull-flag-20260901.json)
+
+</details>
 
 ## FTShare 的三种接入方式
 
