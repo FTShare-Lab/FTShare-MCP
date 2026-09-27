@@ -1,0 +1,72 @@
+{
+  "tested_at": "2026-09-27",
+  "annotations_request": {
+    "tool": "ft_v3_kline_pattern_annotations",
+    "arguments": {
+      "date": "20260901",
+      "symbol": "000089",
+      "pattern": "上升旗形",
+      "page": 1,
+      "page_size": 5
+    }
+  },
+  "annotations_response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"data\":[{\"confidence\":0.58,\"current_phase\":\"旗面整理结束后的向上突破，处于突破后首个交易日的观察阶段，尚未完成连续两个交易日站稳确认\",\"date\":\"2026-09-01\",\"direction\":\"bullish\",\"end_time\":\"2026-09-01 14:45\",\"image_hash\":\"a1eab19298a3d3bbda501330a03879d5984edcc1a64e8c271f529dec8e8f4896\",\"pattern\":\"上升旗形\",\"rationale\":\"可见价格轮廓支持快速上涨旗杆、短线回撤整理和放量上破这一组结构，成交量数据也支持bar_index 64为明显放量突破。但15分钟周期、图片无价格坐标、均线和MACD缺失，且突破后不足两个完整交易日，故仅判定为上升旗形candidate，不判定为confirmed。\",\"start_time\":\"2026-08-27 13:00\",\"status\":\"candidate\",\"stock_code\":\"000089\",\"stock_name\":\"深圳机场\"}],\"metadata\":{\"operation\":\"kline_pattern_annotations\",\"pagination\":{\"has_more\":false,\"page\":1,\"page_size\":5,\"pages\":1,\"supported\":true},\"returned\":1,\"schema_version\":\"1.0\",\"source\":\"ftshare\",\"tool\":\"ft_v3_kline_pattern_annotations\",\"total\":1,\"truncated\":false,\"warnings\":[]}}"
+      }
+    ],
+    "structuredContent": {
+      "data": [
+        {
+          "confidence": 0.58,
+          "current_phase": "旗面整理结束后的向上突破，处于突破后首个交易日的观察阶段，尚未完成连续两个交易日站稳确认",
+          "date": "2026-09-01",
+          "direction": "bullish",
+          "end_time": "2026-09-01 14:45",
+          "image_hash": "a1eab19298a3d3bbda501330a03879d5984edcc1a64e8c271f529dec8e8f4896",
+          "pattern": "上升旗形",
+          "rationale": "可见价格轮廓支持快速上涨旗杆、短线回撤整理和放量上破这一组结构，成交量数据也支持bar_index 64为明显放量突破。但15分钟周期、图片无价格坐标、均线和MACD缺失，且突破后不足两个完整交易日，故仅判定为上升旗形candidate，不判定为confirmed。",
+          "start_time": "2026-08-27 13:00",
+          "status": "candidate",
+          "stock_code": "000089",
+          "stock_name": "深圳机场"
+        }
+      ],
+      "metadata": {
+        "operation": "kline_pattern_annotations",
+        "pagination": {
+          "has_more": false,
+          "page": 1,
+          "page_size": 5,
+          "pages": 1,
+          "supported": true
+        },
+        "returned": 1,
+        "schema_version": "1.0",
+        "source": "ftshare",
+        "tool": "ft_v3_kline_pattern_annotations",
+        "total": 1,
+        "truncated": false,
+        "warnings": []
+      }
+    },
+    "isError": false
+  },
+  "image_request": {
+    "tool": "ft_v3_kline_pattern_image",
+    "arguments": {
+      "image_hash": "a1eab19298a3d3bbda501330a03879d5984edcc1a64e8c271f529dec8e8f4896"
+    }
+  },
+  "image_summary": {
+    "auth_note": "下载须携带请求头 FTSHARE_API_KEY: <你的 API Key>；key 从 https://ftai.chat/me/profile 获取，建议先在环境中设置 FTSHARE_API_KEY 再执行示例命令。",
+    "bytes": 58125,
+    "content_type": "image/png",
+    "curl_example": "curl -L -f -H \"FTSHARE_API_KEY: $FTSHARE_API_KEY\" -o 'a1eab19298a3d3bbda501330a03879d5984edcc1a64e8c271f529dec8e8f4896.png' 'https://market.ft.tech/gateway/api/v3/market/data/kline-pattern-annotations/a1eab19298a3d3bbda501330a03879d5984edcc1a64e8c271f529dec8e8f4896'",
+    "download_url": "https://market.ft.tech/gateway/api/v3/market/data/kline-pattern-annotations/a1eab19298a3d3bbda501330a03879d5984edcc1a64e8c271f529dec8e8f4896",
+    "image_hash": "a1eab19298a3d3bbda501330a03879d5984edcc1a64e8c271f529dec8e8f4896",
+    "tool": "ft_v3_kline_pattern_image"
+  }
+}
