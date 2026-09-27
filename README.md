@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ftai.chat/ftshare"><strong>FTShare 正式版</strong></a>
+  <a href="https://ftai.chat/ftshare"><strong>FTShare 官网</strong></a>
   · <a href="https://ftai.chat/me/profile">获取 API Key</a>
   · <a href="#60-秒接入">快速接入</a>
   · <a href="https://github.com/FTShare-Lab/FTShare-MCP/issues">问题反馈</a>
@@ -33,10 +33,10 @@
 FTShare MCP 是面向 AI Agent 的只读金融数据 MCP 服务。Claude Code、Codex 及其他支持 Streamable HTTP MCP 的客户端，可以把自然语言问题转换为标准工具调用，并获得结构化、可核对的结果。
 
 <p align="center">
-  <a href="https://ftai.chat/ftshare"><img src="./docs/assets/readme/ftshare-website.png" width="100%" alt="FTShare 正式版官网横幅，展示金融数据服务及 SDK、MCP、Skills 接入入口"></a>
+  <a href="https://ftai.chat/ftshare"><img src="./docs/assets/readme/ftshare-website.png" width="100%" alt="FTShare 官网横幅，展示金融数据服务及 SDK、MCP、Skills 接入入口"></a>
 </p>
 
-<p align="center"><sub>FTShare 正式版公开页面。点击图片进入产品与套餐页面。</sub></p>
+<p align="center"><sub>FTShare 官网。点击图片进入产品与套餐页面。</sub></p>
 
 ## 60 秒接入
 
