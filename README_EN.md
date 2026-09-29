@@ -33,10 +33,10 @@
 FTShare MCP is a hosted, read-only financial-data service for AI agents. Claude Code, Codex, and other Streamable HTTP MCP clients can turn natural-language questions into standard tool calls and receive structured, verifiable results.
 
 <p align="center">
-  <a href="https://ftai.chat/ftshare"><img src="./docs/assets/readme/ftshare-website.png" width="100%" alt="FTShare product banner showing SDK, MCP, and Skills access"></a>
+  <a href="https://github.com/user-attachments/assets/b9f0fca4-d2a4-4110-8e47-e0c272224f5e"><img src="./docs/assets/readme/promo-cover.jpg" width="100%" alt="Watch the 48-second FTShare MCP introduction"></a>
 </p>
 
-<p align="center"><sub>FTShare's public product page is currently in Chinese. Click the image to open it.</sub></p>
+<p align="center"><strong>▶ Click the cover to watch · 48 seconds · Chinese audio and on-screen text</strong></p>
 
 ## Connect in 60 seconds
 
