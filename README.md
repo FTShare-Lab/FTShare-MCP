@@ -32,11 +32,9 @@
 
 FTShare MCP 是面向 AI Agent 的只读金融数据 MCP 服务。Claude Code、Codex 及其他支持 Streamable HTTP MCP 的客户端，可以把自然语言问题转换为标准工具调用，并获得结构化、可核对的结果。
 
-<p align="center">
-  <a href="https://github.com/user-attachments/assets/b9f0fca4-d2a4-4110-8e47-e0c272224f5e"><img src="./docs/assets/readme/promo-cover.jpg" width="100%" alt="点击观看 48 秒 FTShare MCP 产品介绍"></a>
-</p>
+<p align="center"><sub>48 秒产品介绍 · 点击下方播放按钮，直接观看</sub></p>
 
-<p align="center"><strong>▶ 点击封面观看 · 48 秒产品介绍</strong></p>
+https://github.com/user-attachments/assets/b9f0fca4-d2a4-4110-8e47-e0c272224f5e
 
 ## 60 秒接入
 
