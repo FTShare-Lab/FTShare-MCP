@@ -205,10 +205,10 @@ Subsequent requests must include the session ID, negotiated MCP protocol version
 ### Join the FTShare community
 
 <p align="center">
-  <img src="./docs/assets/wechat-group-20261006.png" width="320" alt="FTShare WeChat community QR code, valid through October 6, 2026">
+  <img src="./docs/assets/wechat-group-20261009.jpg" width="320" alt="FTShare WeChat community QR code">
 </p>
 
-Use GitHub Issues for bugs, feature requests, and documentation problems so they remain trackable. The QR code is valid through October 6, 2026.
+Use GitHub Issues for bugs, feature requests, and documentation problems so they remain trackable. If the QR code expires, please open an Issue.
 
 ## License
 
